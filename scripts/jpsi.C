@@ -15,7 +15,7 @@ void jpsi(
 
 
 	// load tree
-    TChain *const tt_event = new TChain("event_tree");
+    TChain *const tt_event = new TChain("T");
     if (inFile.EndsWith(".root")) {                     // are we loading a single root tree?
         std::cout << "loading a single root file" << std::endl;
         tt_event->AddFile(inFile);
@@ -46,7 +46,7 @@ void jpsi(
     double elect_energy = 10;
     double proton_energy = 100;
 
-    TFile *MyFile = new TFile("jpsi_test.root","RECREATE");
+    TFile *MyFile = new TFile("./../rootfiles/jpsi_final.root","RECREATE");
 	TTree *EvTree = new TTree( "T", "T" );
 
 	int nTracks;
@@ -194,90 +194,15 @@ void jpsi(
     int alltrack3 = 0 ;
 
     // main event loop
+    //for (Long64_t i=0; i<nEntriesTree;i++) {  
     for (Long64_t i=0; i<nEntriesTree;i++) {  
 
     	tt_event->GetEntry(i);
     	
     	if (_hepmcp_Q2 < 1.) continue;
-
+    	
     	nHits = _nHits;
 
-    	for(int h=0; h<nHits; h++){
-    		hits_trueID[h]  = _hits_trueID[h];
-    		hits_layerID[h] = _hits_layerID[h];
-    		ZDCsurrogate_hits_x[h] = ZDCsurrogate_hits_y[h] = ZDCsurrogate_hits_z[h] = -1000;
-    		ZDCsurrogate_hits_x2[h] = ZDCsurrogate_hits_y2[h] = ZDCsurrogate_hits_z2[h] = -1000;
-    		ZDCsurrogate_hits_t[h] = ZDCsurrogate_hits_edep[h] = -1000;
-    		rp1_hits_x[h]     = rp1_hits_y[h] = rp1_hits_z[h] = -1000;
-    		rp1_hits_x2[h]    = rp1_hits_y2[h] = rp1_hits_z2[h] = -1000;
-    		rp1_hits_t[h]     = rp1_hits_edep[h] = -1000;
-    		rp2_hits_x[h]     = rp2_hits_y[h] = rp2_hits_z[h] = -1000;
-    		rp2_hits_x2[h]    = rp2_hits_y2[h] = rp2_hits_z2[h] = -1000;
-    		rp2_hits_t[h]     = rp2_hits_edep[h] = -1000;
-    		b0_hits_x[h]      = b0_hits_y[h] = b0_hits_z[h] = -1000;
-    		b0_hits_x2[h]     = b0_hits_y2[h] = b0_hits_z2[h] = -1000;
-    		b0_hits_t[h]      = b0_hits_edep[h] = -1000;
-    		offmom_hits_x[h]  = offmom_hits_y[h] = offmom_hits_z[h] = -1000;
-    		offmom_hits_x2[h] = offmom_hits_y2[h] = offmom_hits_z2[h] = -1000;
-    		offmom_hits_t[h]  = offmom_hits_edep[h] = -1000;
-
-    		if(hits_layerID[h] == 70){
-    			ZDCsurrogate_hits_x[h]    = _hits_x[h];
-    			ZDCsurrogate_hits_y[h]    = _hits_y[h];
-    			ZDCsurrogate_hits_z[h]    = _hits_z[h];
-    			ZDCsurrogate_hits_x2[h]   = _hits_x2[h];
-    			ZDCsurrogate_hits_y2[h]   = _hits_y2[h];
-    			ZDCsurrogate_hits_z2[h]   = _hits_z2[h];
-    			ZDCsurrogate_hits_t[h]    = _hits_t[h];
-    			ZDCsurrogate_hits_edep[h] = _hits_edep[h]; 
-    		}
-    		if(hits_layerID[h] == 71){
-    			rp1_hits_x[h]    = _hits_x[h];
-    			rp1_hits_y[h]    = _hits_y[h];
-    			rp1_hits_z[h]    = _hits_z[h];
-    			rp1_hits_x2[h]   = _hits_x2[h];
-    			rp1_hits_y2[h]   = _hits_y2[h];
-    			rp1_hits_z2[h]   = _hits_z2[h];
-    			rp1_hits_t[h]    = _hits_t[h];
-    			rp1_hits_edep[h] = _hits_edep[h]; 
-    		}
-
-    		if(hits_layerID[h] == 72){
-    			b0_hits_x[h]    = _hits_x[h];
-    			b0_hits_y[h]    = _hits_y[h];
-    			b0_hits_z[h]    = _hits_z[h];
-    			b0_hits_x2[h]   = _hits_x2[h];
-    			b0_hits_y2[h]   = _hits_y2[h];
-    			b0_hits_z2[h]   = _hits_z2[h];
-    			b0_hits_t[h]    = _hits_t[h];
-    			b0_hits_edep[h] = _hits_edep[h]; 
-    		}
-
-    		if(hits_layerID[h] == 73){
-    			rp2_hits_x[h]    = _hits_x[h];
-    			rp2_hits_y[h]    = _hits_y[h];
-    			rp2_hits_z[h]    = _hits_z[h];
-    			rp2_hits_x2[h]   = _hits_x2[h];
-    			rp2_hits_y2[h]   = _hits_y2[h];
-    			rp2_hits_z2[h]   = _hits_z2[h];
-    			rp2_hits_t[h]    = _hits_t[h];
-    			rp2_hits_edep[h] = _hits_edep[h]; 
-    		}
-    		if(hits_layerID[h] == 74){
-    			offmom_hits_x[h]    = _hits_x[h];
-    			offmom_hits_y[h]    = _hits_y[h];
-    			offmom_hits_z[h]    = _hits_z[h];
-    			offmom_hits_x2[h]   = _hits_x2[h];
-    			offmom_hits_y2[h]   = _hits_y2[h];
-    			offmom_hits_z2[h]   = _hits_z2[h];
-    			offmom_hits_t[h]    = _hits_t[h];
-    			offmom_hits_edep[h] = _hits_edep[h]; 
-    		}
-
-
-    	}
-
-    
     	TLorentzVector JpsiHepmc;
     	TLorentzVector eeHepmc;
     	TLorentzVector emHepmc;
@@ -385,7 +310,7 @@ void jpsi(
         //====== ep
         ep_phi_MC     = epMC.Phi()*180/TMath::Pi();
       	ep_theta_MC   = epMC.Theta()*180/TMath::Pi();
-        ep_eta_MC 	  = epMC.Eta();
+        ep_eta_MC 	  = epMC_det.Eta();
         ep_pT_MC	  = epMC.Perp();
         ep_p_MC       = epMC.Vect().Mag();
         ep_E_MC       = epMC.E();
@@ -393,7 +318,7 @@ void jpsi(
         //====== em
        	em_phi_MC     = emMC.Phi()*180/TMath::Pi();
       	em_theta_MC   = emMC.Theta()*180/TMath::Pi();
-      	em_eta_MC 	  = -TMath::Log(TMath::Tan(emMC.Theta()/2));
+      	em_eta_MC 	  = epMC_det.Eta();
         em_pT_MC	  = emMC.Perp();
         em_p_MC       = emMC.Vect().Mag();
         em_E_MC       = emMC.E();
@@ -423,11 +348,11 @@ void jpsi(
 		int othercharged[3];
 		int noe = 0;
 		int nep = 0;
-		if(_nTracks != 9) continue;
+		if(_nTracks != 3) continue;
 
 		alltrack3++;
 		
-		if(_nTracks ==9){
+		if(_nTracks ==3){
 			
 	
 			//======= Read from the tracking paths ==============//
@@ -446,7 +371,7 @@ void jpsi(
 		}
 
 		if(nep>1) continue;
-		xsif(nep>2) continue;
+		if(nep>2) continue;
 			
 		hypep.SetXYZM(_track_px[eptrack_N[0]],_track_py[eptrack_N[0]],_track_pz[eptrack_N[0]], me);
 		hyp1.SetXYZM(_track_px[othercharged[0]],_track_py[othercharged[0]],_track_pz[othercharged[0]], me);

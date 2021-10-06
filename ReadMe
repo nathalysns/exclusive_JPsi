@@ -1,0 +1,21 @@
+
+
+#This folder contains the Module and post-processing scripts of the ep->JPsip->eep channel
+
+#1. The src folder contains the excl_ana module to read the information of the DST_Reader
+# To compile it:
+# In the singularity container load the environment
+ source setup.csh 
+#go to the src folder and create a build folder
+ cd src
+ mkdir build
+ ../autogen.sh  --prefix=$MYINSTALL
+ make install  
+
+#2, to use the Module use the macro: macros/Fun4All_exclusive.C
+# it only use the number of events, input DST file and output file 
+#   -1 runs all the events. Example 
+ root -l -b -q .x Fun4All_exclusive.C\(100,\"/work/eic/users/nathaly/jobs/exclusive/rootfiles/JPsi_e18_p275_205.root\",\"out.root\"\)
+
+#This creates a root file with the events that are read. I add all the events and form the rootfile JPsi_all.root in the rootfiles folder 
+ 

@@ -250,14 +250,14 @@ void SetBranchAddressesTree(TTree* inputTree){
     if (inputTree->GetBranchStatus("nTracks") ){
       tracksEnabled = 1;
       inputTree->SetBranchAddress("nTracks",              &_nTracks);
-      inputTree->SetBranchAddress("tracks_ID",            _track_ID);
-      inputTree->SetBranchAddress("tracks_px",            _track_px);
-      inputTree->SetBranchAddress("tracks_py",            _track_py);
-      inputTree->SetBranchAddress("tracks_pz",            _track_pz);
-      inputTree->SetBranchAddress("tracks_trueID",        _track_trueID);
-      inputTree->SetBranchAddress("tracks_source",        _track_source);
+      inputTree->SetBranchAddress("track_ID",            _track_ID);
+      inputTree->SetBranchAddress("track_px",            _track_px);
+      inputTree->SetBranchAddress("track_py",            _track_py);
+      inputTree->SetBranchAddress("track_pz",            _track_pz);
+      inputTree->SetBranchAddress("track_trueID",        _track_trueID);
+     // inputTree->SetBranchAddress("track_source",        _track_source);
        inputTree->SetBranchAddress("tracks_charge",       _track_charge);
-
+/*
       inputTree->SetBranchAddress("nProjections",         &_nProjections);
       inputTree->SetBranchAddress("track_ProjTrackID",    _track_ProjTrackID);
       inputTree->SetBranchAddress("track_ProjLayer",      _track_ProjLayer);
@@ -265,12 +265,12 @@ void SetBranchAddressesTree(TTree* inputTree){
       inputTree->SetBranchAddress("track_TLP_x",           _track_Proj_x);
       inputTree->SetBranchAddress("track_TLP_y",           _track_Proj_y);
       inputTree->SetBranchAddress("track_TLP_z",           _track_Proj_z);
-      inputTree->SetBranchAddress("track_TLP_t",           _track_Proj_t);
+      //inputTree->SetBranchAddress("track_TLP_t",           _track_Proj_t);
       inputTree->SetBranchAddress("track_TLP_true_x",      _track_Proj_true_x);
       inputTree->SetBranchAddress("track_TLP_true_y",      _track_Proj_true_y);
       inputTree->SetBranchAddress("track_TLP_true_z",      _track_Proj_true_z);
-      inputTree->SetBranchAddress("track_TLP_true_t",      _track_Proj_true_t);
-      
+      //inputTree->SetBranchAddress("track_TLP_true_t",      _track_Proj_true_t);
+  */    
     }
 
     // towers EEMC
@@ -419,10 +419,10 @@ void SetBranchAddressesTree(TTree* inputTree){
     inputTree->SetBranchAddress("mcpart_pz",     _mcpart_pz);
     inputTree->SetBranchAddress("mcpart_BCID",     _mcpart_BCID);
 
-    if (inputTree->GetBranchStatus("nHepmcp") ){
+    if (inputTree->GetBranchStatus("maxNHepmcp") ){
       HepmcEnabled = 1;
-      inputTree->SetBranchAddress("nHepmcp",      &_nHepmcp);
-      inputTree->SetBranchAddress("hepmcp_procid",      &_hepmcp_procid);
+      inputTree->SetBranchAddress("maxNHepmcp",      &_nHepmcp);
+      //inputTree->SetBranchAddress("hepmcp_procid",      &_hepmcp_procid);
       inputTree->SetBranchAddress("hepmcp_x1",          &_hepmcp_x1);
       inputTree->SetBranchAddress("hepmcp_x2",          &_hepmcp_x2);
       inputTree->SetBranchAddress("hepmcp_Q2",          &_hepmcp_Q2);

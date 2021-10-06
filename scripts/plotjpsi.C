@@ -1,7 +1,7 @@
 #include "plot.h"
 
 void plotjpsi(
-	TString inFile            	= "jpsi_test.root"
+	TString inFile            	= "./../rootfiles/jpsi_final.root"
 ){
 
 gStyle->SetOptStat(0);
@@ -25,7 +25,7 @@ TChain *const tt_event = new TChain("T");
  
 if(!tt_event){ std::cout << "tree not found... returning!"<< std::endl; return;}
 TCut cut = "e_E > 4. && Q2 > 1. && e_eta < 0";
-double emin = 0; double emax = 100;
+double emin = 0; double emax = 300;
 //==================== HEpmc
 Int_t bins1 =100;
 TH2F *kinepHepmc    = new TH2F("kinepHepmc", "", bins1, 0., 20, bins1, -10, 10);

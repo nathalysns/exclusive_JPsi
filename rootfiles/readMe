@@ -1,0 +1,5 @@
+This folder is used to store the rootfiles from the Module and the geometry rootfile.
+=> JPsi_all.root
+=> geometry.root
+It will also store the files from the postprocessing scripts.
+=>JPsi_finalcandidates.root 

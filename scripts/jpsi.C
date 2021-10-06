@@ -6,8 +6,8 @@
 //#include "clusterizer.cxx"
 
 void jpsi(
-	TString inFile            	= "test_eval.root",
-	TString inFileGeometry      = "../../../rootfiles/geometry_ideal_CEMCproj_EEMC_LFHCAL_corrected.root",
+	TString inFile            	= "./../rootfiles/JPsi_all.root",
+	TString inFileGeometry      = "./../rootfiles/geometry.root",
 	bool do_reclus              = true,
     unsigned short primaryTrackSource = 0
 

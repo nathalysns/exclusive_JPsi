@@ -63,21 +63,7 @@ void jpsi(
 	double ep_E, em_E, p_E, Jpsi_E, e_E, phiJpsidet;
 
 	double Q2, xbj, Q2MC, xbjMC, phiJpsi;
-	double ZDCsurrogate_hits_x[20], ZDCsurrogate_hits_y[20], ZDCsurrogate_hits_z[20];
-    double ZDCsurrogate_hits_x2[20], ZDCsurrogate_hits_y2[20], ZDCsurrogate_hits_z2[20];
-    double ZDCsurrogate_hits_t[20], ZDCsurrogate_hits_edep[20];
-    double rp1_hits_x[20], rp1_hits_y[20], rp1_hits_z[20];
-    double rp1_hits_x2[20], rp1_hits_y2[20], rp1_hits_z2[20];
-    double rp1_hits_t[20], rp1_hits_edep[20];
-    double rp2_hits_x[20], rp2_hits_y[20], rp2_hits_z[20];
-    double rp2_hits_x2[20], rp2_hits_y2[20], rp2_hits_z2[20];
-    double rp2_hits_t[20], rp2_hits_edep[20];
-    double b0_hits_x[20], b0_hits_y[20], b0_hits_z[20];
-    double b0_hits_x2[20], b0_hits_y2[20], b0_hits_z2[20];
-    double b0_hits_t[20], b0_hits_edep[20];
-    double offmom_hits_x[20], offmom_hits_y[20], offmom_hits_z[20];
-    double offmom_hits_x2[20], offmom_hits_y2[20], offmom_hits_z2[20];
-    double offmom_hits_t[20], offmom_hits_edep[20];
+
 
 	int nHits; 
 	int hits_layerID[20];
@@ -125,54 +111,22 @@ void jpsi(
 	EvTree->Branch("phiJpsi",&phiJpsi,"phiJpsi/D");
 	EvTree->Branch("phiJpsidet",&phiJpsidet,"phiJpsidet/D");
 
-	EvTree->Branch("nHits",&nHits,"nHits/I");
-	EvTree->Branch("hits_layerID",hits_layerID,"hits_layerID[nHits]/I");
-	EvTree->Branch("hits_trueID",hits_trueID,"hits_trueID[nHits]/I");
-	EvTree->Branch("ZDCsurrogate_hits_x",    ZDCsurrogate_hits_x,    "ZDCsurrogate_hits_x[nHits]/D");
-	EvTree->Branch("ZDCsurrogate_hits_y",    ZDCsurrogate_hits_y,    "ZDCsurrogate_hits_y[nHits]/D");
-	EvTree->Branch("ZDCsurrogate_hits_z",    ZDCsurrogate_hits_z,    "ZDCsurrogate_hits_z[nHits]/D");
-	EvTree->Branch("ZDCsurrogate_hits_x2",   ZDCsurrogate_hits_x2,   "ZDCsurrogate_hits_x2[nHits]/D");
-	EvTree->Branch("ZDCsurrogate_hits_y2",   ZDCsurrogate_hits_y2,   "ZDCsurrogate_hits_y2[nHits]/D");
-	EvTree->Branch("ZDCsurrogate_hits_z2",   ZDCsurrogate_hits_z2,   "ZDCsurrogate_hits_z2[nHits]/D");
-	EvTree->Branch("ZDCsurrogate_hits_t",    ZDCsurrogate_hits_t,    "ZDCsurrogate_hits_t[nHits]/D");
-	EvTree->Branch("ZDCsurrogate_hits_edep", ZDCsurrogate_hits_edep, "ZDCsurrogate_hits_edep[nHits]/D");
+	EvTree->Branch("RP1",&_RP1,"RP1/I");
+    EvTree->Branch("RP2",&_RP2,"RP2/I");
+    EvTree->Branch("RPhits",&_RPhits,"RPhits/I");
+    EvTree->Branch("RPx",_RPx,"RPx[RPhits]/F");
+    EvTree->Branch("RPy",_RPy,"RPy[RPhits]/F");
+    EvTree->Branch("RPz",_RPz,"RPz[RPhits]/F");
+    EvTree->Branch("RPind",_RPind,"RPind[RPhits]/I");
+    EvTree->Branch("RPtrPx",_RPtrPx,"RPtrPx[RPhits]/F");
+    EvTree->Branch("RPtrPy",_RPtrPy,"RPtrPy[RPhits]/F");
+    EvTree->Branch("RPtrPz",_RPtrPz,"RPtrPz[RPhits]/F");
+    EvTree->Branch("RPid",_RPid,"RPid[RPhits]/I");
+    EvTree->Branch("RPpx",_RPpx,"RPpx[RPhits]/F");
+    EvTree->Branch("RPpy",_RPpy,"RPpy[RPhits]/F");
+    EvTree->Branch("RPpz",_RPpz,"RPpz[RPhits]/F");
+    EvTree->Branch("RPpid",_RPpid,"RPpid[RPhits]/I");
 
-	EvTree->Branch("rp1_hits_x",  rp1_hits_x,  "rp1_hits_x[nHits]/D");
-	EvTree->Branch("rp1_hits_y",  rp1_hits_y,  "rp1_hits_y[nHits]/D");
-	EvTree->Branch("rp1_hits_z",  rp1_hits_z,  "rp1_hits_z[nHits]/D");
-	EvTree->Branch("rp1_hits_x2", rp1_hits_x2, "rp1_hits_x2[nHits]/D");
-	EvTree->Branch("rp1_hits_y2", rp1_hits_y2, "rp1_hits_y2[nHits]/D");
-	EvTree->Branch("rp1_hits_z2", rp1_hits_z2, "rp1_hits_z2[nHits]/D");
-	EvTree->Branch("rp1_hits_t",  rp1_hits_t,  "rp1_hits_t[nHits]/D");
-	EvTree->Branch("rp1_hits_edep",  rp1_hits_edep,  "rp1_hits_edep[nHits]/D");
-
-	EvTree->Branch("rp2_hits_x", rp2_hits_x,  "rp2_hits_x[nHits]/D");
-	EvTree->Branch("rp2_hits_y", rp2_hits_y,  "rp2_hits_y[nHits]/D");
-	EvTree->Branch("rp2_hits_z", rp2_hits_z,  "rp2_hits_z[nHits]/D");
-	EvTree->Branch("rp2_hits_x2",rp2_hits_x2, "rp2_hits_x2[nHits]/D");
-	EvTree->Branch("rp2_hits_y2",rp2_hits_y2, "rp2_hits_y2[nHits]/D");
-	EvTree->Branch("rp2_hits_z2",rp2_hits_z2, "rp2_hits_z2[nHits]/D");
-	EvTree->Branch("rp2_hits_t", rp2_hits_t,  "rp2_hits_t[nHits]/D");
-	EvTree->Branch("rp2_hits_edep", rp2_hits_edep,  "rp2_hits_edep[nHits]/D");
-
-    EvTree->Branch("b0_hits_x",     b0_hits_x,  "b0_hits_x[nHits]/D");
-	EvTree->Branch("b0_hits_y",     b0_hits_y,  "b0_hits_y[nHits]/D");
-	EvTree->Branch("b0_hits_z",     b0_hits_z,  "b0_hits_z[nHits]/D");
-	EvTree->Branch("b0_hits_x2",    b0_hits_x2, "b0_hits_x2[nHits]/D");
-	EvTree->Branch("b0_hits_y2",    b0_hits_y2,   "b0_hits_y2[nHits]/D");
-	EvTree->Branch("b0_hits_z2",    b0_hits_z2,    "b0_hits_z2[nHits]/D");
-	EvTree->Branch("b0_hits_t",     b0_hits_t,     "b0_hits_t[nHits]/D");
-	EvTree->Branch("b0_hits_edep",  b0_hits_edep,  "b0_hits_edep[nHits]/D");
-
-
-	EvTree->Branch("offmom_hits_x",     offmom_hits_x,     "offmom_hits_x[nHits]/D");
-	EvTree->Branch("offmom_hits_y",     offmom_hits_y,     "offmom_hits_y[nHits]/D");
-	EvTree->Branch("offmom_hits_z",     offmom_hits_z,     "offmom_hits_z[nHits]/D");
-	EvTree->Branch("offmom_hits_x2",    offmom_hits_x2,    "offmom_hits_x2[nHits]/D");
-	EvTree->Branch("offmom_hits_y2",    offmom_hits_y2,    "offmom_hits_y2[nHits]/D");
-	EvTree->Branch("offmom_hits_z2",    offmom_hits_z2,    "offmom_hits_z2[nHits]/D");
-	EvTree->Branch("offmom_hits_t",     offmom_hits_t,     "offmom_hits_t[nHits]/D");
-	EvTree->Branch("offmom_hits_edep",  offmom_hits_edep,  "offmom_hits_edep[nHits]/D");
 
 	if(HepmcEnabled){
     		AddBranchesHepmc(EvTree);
@@ -201,8 +155,6 @@ void jpsi(
     	
     	if (_hepmcp_Q2 < 1.) continue;
     	
-    	nHits = _nHits;
-
     	TLorentzVector JpsiHepmc;
     	TLorentzVector eeHepmc;
     	TLorentzVector emHepmc;
@@ -287,19 +239,19 @@ void jpsi(
         }
 
         TLorentzVector JpsiMC_det 	= 	epMC_det + emMC_det;
-/*
+
         TLorentzVector pMC        	=  	rotlor*pMC_det;  	
        	TLorentzVector JpsiMC 		= 	rotlor*JpsiMC_det;
        	TLorentzVector eMC    		=	rotlor*eMC_det;
        	TLorentzVector epMC    		=	rotlor*epMC_det;
        	TLorentzVector emMC    		=	rotlor*emMC_det;
-*/
+/*
         TLorentzVector pMC        	=  	pMC_det;  	
        	TLorentzVector JpsiMC 		= 	JpsiMC_det;
        	TLorentzVector eMC    		=	eMC_det;
        	TLorentzVector epMC    		=	epMC_det;
        	TLorentzVector emMC    		=	emMC_det;
-
+*/
         Jpsi_mass_MC  = JpsiMC.M();
       	Jpsi_theta_MC = JpsiMC.Theta()*180/TMath::Pi();
       	Jpsi_phi_MC   = JpsiMC.Phi()*180/TMath::Pi();

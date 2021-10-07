@@ -24,6 +24,7 @@ const int _maxNProjections = 2000;
 const int _maxNMCPart = 100000;
 const int _maxNHepmcp = 1000;
 const int _maxNHits = 1000;
+const int _maxRPhits = 1000;
 
 float _nEventsTree;
 
@@ -218,19 +219,25 @@ float* _hepmcp_py              = new float[_maxNHepmcp];
 float* _hepmcp_pz              = new float[_maxNHepmcp];
 int* _hepmcp_BCID              = new int[_maxNHepmcp]; 
 int* _hepmcp_m1                = new int[_maxNHepmcp];
-int* _hepmcp_m2                = new int[_maxNHepmcp]; 
+int* _hepmcp_m2                = new int[_maxNHepmcp];
 
-int _nHits;
-int *_hits_layerID     = new int[_maxNHits];
-int *_hits_trueID      = new int[_maxNHits];
-float* _hits_x          = new float[_maxNHits];
-float* _hits_y          = new float[_maxNHits];
-float* _hits_z          = new float[_maxNHits];
-float* _hits_x2         = new float[_maxNHits];
-float* _hits_y2         = new float[_maxNHits];
-float* _hits_z2         = new float[_maxNHits];
-float* _hits_t          = new float[_maxNHits];
-float* _hits_edep       = new float[_maxNHits];
+
+int _RPhits; 
+int _RP1;
+int _RP2;
+
+float* _RPx = new float[_maxRPhits];
+float* _RPy = new float[_maxRPhits];
+float* _RPz = new float[_maxRPhits];
+int*   _RPind = new int[_maxRPhits];
+float* _RPpx = new float[_maxRPhits];
+float* _RPpy = new float[_maxRPhits];
+float* _RPpz = new float[_maxRPhits];
+float* _RPtrPx = new float[_maxRPhits];
+float* _RPtrPy = new float[_maxRPhits];
+float* _RPtrPz = new float[_maxRPhits];
+int*   _RPid = new int[_maxRPhits];
+int*  _RPpid = new int[_maxRPhits];
 
 void SetBranchAddressesTree(TTree* inputTree){
 
@@ -437,20 +444,27 @@ void SetBranchAddressesTree(TTree* inputTree){
       inputTree->SetBranchAddress("hepmcp_m2",          _hepmcp_m2);
     }
 
-    if (inputTree->GetBranchStatus("nHits") ){
-      HitsEnabled = 1;
-      inputTree->SetBranchAddress("nHits",      &_nHits);
-      inputTree->SetBranchAddress("hits_layerID",   _hits_layerID);
-      inputTree->SetBranchAddress("hits_trueID",    _hits_trueID);
-      inputTree->SetBranchAddress("hits_x",         _hits_x);
-      inputTree->SetBranchAddress("hits_y",         _hits_y);
-      inputTree->SetBranchAddress("hits_z",         _hits_z);
-      inputTree->SetBranchAddress("hits_x2",        _hits_x2);
-      inputTree->SetBranchAddress("hits_y2",        _hits_y2);
-      inputTree->SetBranchAddress("hits_z2",        _hits_z2);
-      inputTree->SetBranchAddress("hits_t",         _hits_t);
-      inputTree->SetBranchAddress("hits_edep",      _hits_edep);
-    }
+    inputTree->SetBranchAddress("hepmcp_x1",          &_hepmcp_x1);
+
+    inputTree->SetBranchAddress("RP1",&_RP1);
+    inputTree->SetBranchAddress("RP2",&_RP2);
+    inputTree->SetBranchAddress("RPhits",&_RPhits);
+    inputTree->SetBranchAddress("RPx",_RPx);
+    inputTree->SetBranchAddress("RPy",_RPy);
+    inputTree->SetBranchAddress("RPz",_RPz);
+    inputTree->SetBranchAddress("RPind",_RPind);
+    inputTree->SetBranchAddress("RPtrPx",_RPtrPx);
+    inputTree->SetBranchAddress("RPtrPy",_RPtrPy);
+    inputTree->SetBranchAddress("RPtrPz",_RPtrPz);
+    inputTree->SetBranchAddress("RPid",_RPid);
+    inputTree->SetBranchAddress("RPpx",_RPpx);
+    inputTree->SetBranchAddress("RPpy",_RPpy);
+    inputTree->SetBranchAddress("RPpz",_RPpz);
+    inputTree->SetBranchAddress("RPpid",_RPpid);
+   
+
+
+
 }
 
 TRandom3  _fRandom;                                  // random for effi generation

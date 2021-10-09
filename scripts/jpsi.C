@@ -9,7 +9,8 @@ void jpsi(
 	TString inFile            	= "./../rootfiles/JPsi_all.root",
 	TString inFileGeometry      = "./../rootfiles/geometry.root",
 	bool do_reclus              = true,
-    unsigned short primaryTrackSource = 0
+    unsigned short primaryTrackSource = 0,
+    bool HOFrame  				= true
 
 ){
 
@@ -126,6 +127,7 @@ void jpsi(
     EvTree->Branch("RPpy",_RPpy,"RPpy[RPhits]/F");
     EvTree->Branch("RPpz",_RPpz,"RPpz[RPhits]/F");
     EvTree->Branch("RPpid",_RPpid,"RPpid[RPhits]/I");
+    EvTree->Branch("nTracks",&_nTracks,"nTracks/I");
 
 
 	if(HepmcEnabled){
@@ -204,6 +206,7 @@ void jpsi(
         TLorentzVector emMC_det;
         TLorentzVector pMC_det;
         TLorentzVector eMC_det;
+        if(_nMCPart!=4) continue;
 
         for(int imc=0; imc<_nMCPart; imc++){
         	 //===== J/Psi True
@@ -239,6 +242,8 @@ void jpsi(
         }
 
         TLorentzVector JpsiMC_det 	= 	epMC_det + emMC_det;
+
+
 
         TLorentzVector pMC        	=  	rotlor*pMC_det;  	
        	TLorentzVector JpsiMC 		= 	rotlor*JpsiMC_det;
@@ -300,7 +305,7 @@ void jpsi(
 		int othercharged[3];
 		int noe = 0;
 		int nep = 0;
-		if(_nTracks != 3) continue;
+		//if(_nTracks != 3) continue;
 
 		alltrack3++;
 		
@@ -354,6 +359,12 @@ void jpsi(
 			continue;
 		}
 
+		if(HOFrame){
+			JPsi = rotlor*JPsi;
+			em   = rotlor*em;
+			ep   = rotlor*ep;
+			Electron = rotlor*Electron;
+		}
 
 
 		Jpsi_M = JPsi.M();
@@ -401,6 +412,7 @@ void jpsi(
 
 		track++;
 	
+		//f (Q2MClepton<5.) continue;
 
 
 	  	EvTree->Fill();

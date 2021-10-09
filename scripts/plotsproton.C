@@ -1,6 +1,6 @@
 #include "plot.h"
 #include "cuts_list.h"
-
+#include "../common/ECCEStyle.C"
 
 void plotsproton(
 
@@ -26,8 +26,8 @@ TChain *const tt_event = new TChain("T");
         files.close();
     }
 
+SetECCEStyle();
 
-TCut allcuts = RPpid + RPhits + !RPcut1 + RPcut2;// + RPcutxmax + RPcuty + RPcutymax;
 
 
 TCut tcut1 ="RPpid[0]==2212";
@@ -36,6 +36,10 @@ TH3F* RPhist1 = new TH3F("RPhist1","",100,2500,3000,100,-100,-50,100,-10,10);
 TH3F* RPhist2 = new TH3F("RPhist2","",100,2500,3000,100,-100,-50,100,-10,10);
 tt_event->Draw("RPy[0]:RPx[0]:RPz[0]>>RPhist1", allcuts, "goff");
 tt_event->Draw("RPy[1]:RPx[1]:RPz[1]>>RPhist2", allcuts, "goff");
+
+//tt_event->Draw("RPy[0]:RPx[0]:RPz[0]>>RPhist1", "", "goff");
+//tt_event->Draw("RPy[1]:RPx[1]:RPz[1]>>RPhist2", "", "goff");
+
 SetStyleHistoTH3ForGraphs(RPhist1,"Z [cm]", "X [cm]", "Y [cm]", 0.03, 0.05, 0.03, 0.05, 0.03, 0.05);
 TCanvas *c1 = new TCanvas("c1","",0,0,800,800);
 RPhist1->SetFillColor(9);
@@ -82,24 +86,15 @@ l4->Draw("same");
 c1->SaveAs(Form("%s/RP_nocuts.pdf",outdir.Data()));
 
 TCanvas *c2 = new TCanvas("c2","",0,0,800,800);
-
-ECCE
-Sartre e+Pb 18x108.4
- ee→ ψJ/ 2 < 10 GeV21 < Q
-HEPMC level
-G4 input
-Reconstructed
-
 TH1F* etaproton = new TH1F("etaproton","",bins,4,5);
 TH1F* etaprotoncut = new TH1F("etaprotoncut","",bins,4,5);
-
 tt_event->Draw("p_eta_MC>>etaproton", RPpid + RPhits,"goff");
 tt_event->Draw("p_eta_MC>>etaprotoncut",allcuts,"goff");
-
 etaproton->SetLineColor(kBlack);
 etaproton->Draw();
 etaprotoncut->Draw("same");
 
+TCanvas *c23= new TCanvas("c3","",0,0,800,800);
 
 
 

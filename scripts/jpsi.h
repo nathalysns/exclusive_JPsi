@@ -239,6 +239,11 @@ float* _RPtrPz = new float[_maxRPhits];
 int*   _RPid = new int[_maxRPhits];
 int*  _RPpid = new int[_maxRPhits];
 
+float _EMJpsi_px, _EMJpsi_py, _EMJpsi_pz, _EMJpsi_e;
+float _EPJpsi_px, _EPJpsi_py, _EPJpsi_pz, _EPJpsi_e;
+float _E_px, _E_py, _E_pz, _E_e;
+float _P_px, _P_py, _P_pz, _P_e;
+
 void SetBranchAddressesTree(TTree* inputTree){
 
     if (inputTree->GetBranchStatus("cross_section") ){
@@ -462,6 +467,25 @@ void SetBranchAddressesTree(TTree* inputTree){
     inputTree->SetBranchAddress("RPpz",_RPpz);
     inputTree->SetBranchAddress("RPpid",_RPpid);
    
+    inputTree->Branch("EMJpsi_px", &_EMJpsi_px);
+    inputTree->Branch("EMJpsi_py", &_EMJpsi_py);
+    inputTree->Branch("EMJpsi_pz", &_EMJpsi_pz);
+    inputTree->Branch("EMJpsi_e",  &_EMJpsi_e);
+
+    inputTree->Branch("EPJpsi_px", &_EPJpsi_px);
+    inputTree->Branch("EPJpsi_py", &_EPJpsi_py);
+    inputTree->Branch("EPJpsi_pz", &_EPJpsi_pz);
+    inputTree->Branch("EPJpsi_e",  &_EPJpsi_e);
+
+    inputTree->Branch("E_px", &_E_px);
+    inputTree->Branch("E_py", &_E_py);
+    inputTree->Branch("E_pz", &_E_pz);
+    inputTree->Branch("E_e",  &_E_e);
+
+    inputTree->Branch("P_px", &_P_px);
+    inputTree->Branch("P_py", &_P_py);
+    inputTree->Branch("P_pz", &_P_pz);
+    inputTree->Branch("P_e",  &_P_e);
 
 
 

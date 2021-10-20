@@ -7,7 +7,7 @@
 #include "clusterizer.cxx"
 
 void jpsi(
-	TString inFile            	= "./../rootfiles/all.root",
+	TString inFile            	= "../macros/18x272-IP6-Bill.root",
 	TString inFileGeometry      = "./../rootfiles/geometry.root",
 	bool do_reclus              = true,
     unsigned short primaryTrackSource = 0,
@@ -45,11 +45,9 @@ void jpsi(
     SetBranchAddressesGeometryTree(tt_geometry);
     SetGeometryIndices();
 
-    double elect_energy = 10;
-    double proton_energy = 100;
 
     TFile *MyFile = new TFile("./../rootfiles/jpsi_final.root","RECREATE");
-	TTree *EvTree = new TTree( "T", "T" );
+    TTree *EvTree = new TTree( "T", "T" );
 
 	int nTracks;
 	int n_mass;
@@ -108,7 +106,7 @@ void jpsi(
 	int nHits; 
 	int hits_layerID[20];
 	int hits_trueID[20];
-
+/*
 	EvTree->Branch("Jpsi_track3_M1",&Jpsi_track3_M1,"Jpsi_track3_M1/D");
 	EvTree->Branch("Jpsi_track3_M2",&Jpsi_track3_M2,"Jpsi_track3_M2/D"); 	
 	
@@ -145,14 +143,14 @@ void jpsi(
 	
 
 	EvTree->Branch("RP1",&_RP1,"RP1/I");
-    EvTree->Branch("RP2",&_RP2,"RP2/I");
-    EvTree->Branch("RPhits",&_RPhits,"RPhits/I");
-    EvTree->Branch("RPx",_RPx,"RPx[RPhits]/F");
-    EvTree->Branch("RPy",_RPy,"RPy[RPhits]/F");
-    EvTree->Branch("RPz",_RPz,"RPz[RPhits]/F");
-    EvTree->Branch("RPind",_RPind,"RPind[RPhits]/I");
-    EvTree->Branch("RPtrPx",_RPtrPx,"RPtrPx[RPhits]/F");
-    EvTree->Branch("RPtrPy",_RPtrPy,"RPtrPy[RPhits]/F");
+    	EvTree->Branch("RP2",&_RP2,"RP2/I");
+    	EvTree->Branch("RPhits",&_RPhits,"RPhits/I");
+    	EvTree->Branch("RPx",_RPx,"RPx[RPhits]/F");
+    	EvTree->Branch("RPy",_RPy,"RPy[RPhits]/F");
+    	EvTree->Branch("RPz",_RPz,"RPz[RPhits]/F");
+   	EvTree->Branch("RPind",_RPind,"RPind[RPhits]/I");
+    	EvTree->Branch("RPtrPx",_RPtrPx,"RPtrPx[RPhits]/F");
+   	EvTree->Branch("RPtrPy",_RPtrPy,"RPtrPy[RPhits]/F");
     EvTree->Branch("RPtrPz",_RPtrPz,"RPtrPz[RPhits]/F");
     EvTree->Branch("RPid",_RPid,"RPid[RPhits]/I");
     EvTree->Branch("RPpx",_RPpx,"RPpx[RPhits]/F");
@@ -217,7 +215,7 @@ void jpsi(
     EvTree->Branch("FEMC_z", _FEMC_z, "FEMC_z[FEMC_nclusters]/F");
     EvTree->Branch("FEMC_ID", _FEMC_ID, "FEMC_ID[FEMC_nclusters]/I");
     EvTree->Branch("FEMC_NtrueID", _FEMC_NtrueID, "FEMC_NtrueID[FEMC_nclusters]/I");
-
+*/
 	if(HepmcEnabled){
     		AddBranchesHepmc(EvTree);
 	}
@@ -237,7 +235,7 @@ void jpsi(
     int alltrack3 = 0 ;
 
     // main event loop
-    //for (Long64_t i=0; i<nEntriesTree;i++) {  
+//    for (Long64_t i=0; i<1000; i++) {  
     for (Long64_t i=0; i<nEntriesTree;i++) {  
 
     	tt_event->GetEntry(i);
@@ -308,7 +306,8 @@ void jpsi(
 	
 			//======= Read from the tracking paths ==============//
 			for(int l=0; l<_nTracks; l++){
-				if(_track_source[l]!=0) continue;
+				//if(_track_source[l]!=0) continue;
+		
 				if( _track_charge[l] == short(1)) {
 					eptrack_N[nep] = l;
 					nep++; 
@@ -319,11 +318,12 @@ void jpsi(
 					noe++;
 				}
 			}
-		}
+		
 
 		if(nep>1) continue;
-		if(nep>2) continue;
-			
+		if(noe!=2) continue;
+		
+		cout << noe << endl;			
 		hypep.SetXYZM(_track_px[eptrack_N[0]],_track_py[eptrack_N[0]],_track_pz[eptrack_N[0]], me);
 		hyp1.SetXYZM(_track_px[othercharged[0]],_track_py[othercharged[0]],_track_pz[othercharged[0]], me);
 		hyp2.SetXYZM(_track_px[othercharged[1]],_track_py[othercharged[1]],_track_pz[othercharged[1]], me);
@@ -355,7 +355,7 @@ void jpsi(
 
 
 
-		float seed_E = 0.5;
+	float seed_E = 0.5;
         float aggregation_E = 0.1;
 
         EEMC_cluster.clear();
@@ -382,77 +382,70 @@ void jpsi(
         float seed_E_EHCAL = 0.01;
         float aggregation_E_EHCAL = 0.005;
 
-		runclusterizer(kMA, kEEMC,    seed_E_EEMC, 	aggregation_E_EEMC, 0);
-		runclusterizer(kMA, kFEMC,    seed_E_FEMC, aggregation_E_FEMC, 0);
-		runclusterizer(kMA, kBECAL,   seed_E_BECAL, aggregation_E_BECAL, 0);
+	runclusterizer(kMA, kEEMC,    seed_E_EEMC, 	aggregation_E_EEMC, 0);
+	runclusterizer(kMA, kFEMC,    seed_E_FEMC, aggregation_E_FEMC, 0);
+	runclusterizer(kMA, kBECAL,   seed_E_BECAL, aggregation_E_BECAL, 0);
 		
-		/*
-		runclusterizer(kMA, kFHCAL,   seed_E_FHCAL, aggregation_E_FHCAL, 0);
-		runclusterizer(kMA, kHCALIN,  seed_E_HCALIN, aggregation_E_HCALIN, 0);
-		runclusterizer(kMA, kHCALOUT, seed_E_HCALOUT, aggregation_E_HCALOUT, 0);
-		runclusterizer(kMA, kEHCAL,   seed_E_EHCAL, aggregation_E_EHCAL, 0);*/
+	
+	runclusterizer(kMA, kFHCAL,   seed_E_FHCAL, aggregation_E_FHCAL, 0);
+	runclusterizer(kMA, kHCALIN,  seed_E_HCALIN, aggregation_E_HCALIN, 0);
+	runclusterizer(kMA, kHCALOUT, seed_E_HCALOUT, aggregation_E_HCALOUT, 0);
+	runclusterizer(kMA, kEHCAL,   seed_E_EHCAL, aggregation_E_EHCAL, 0);
 
-		_BECAL_nclusters = 0;
-		map<int, clustersStrct>::iterator itr;
-		for (itr = BECAL_cluster.begin(); itr != BECAL_cluster.end(); ++itr) {
-			if(itr->second.cluster_E > emin){
-			_BECAL_E[_BECAL_nclusters] =  itr->second.cluster_E;
-			_BECAL_Eta[_BECAL_nclusters] = itr->second.cluster_Eta;
-			_BECAL_Phi[_BECAL_nclusters] = itr->second.cluster_Phi;
-			_BECAL_x[_BECAL_nclusters] = itr->second.cluster_X;
-			_BECAL_y[_BECAL_nclusters] = itr->second.cluster_Y;
-			_BECAL_z[_BECAL_nclusters] = itr->second.cluster_Z;
-			_BECAL_ID[_BECAL_nclusters] = itr->second.cluster_trueID;
-			_BECAL_NtrueID[_BECAL_nclusters] = itr->second.cluster_NtrueID;
-			_BECAL_nclusters++;
-			}		
-		}
+	_BECAL_nclusters = 0;
+	map<int, clustersStrct>::iterator itr;
+	for (itr = BECAL_cluster.begin(); itr != BECAL_cluster.end(); ++itr) {
+		if(itr->second.cluster_E > emin){
+		_BECAL_E[_BECAL_nclusters] =  itr->second.cluster_E;
+		_BECAL_Eta[_BECAL_nclusters] = itr->second.cluster_Eta;
+		_BECAL_Phi[_BECAL_nclusters] = itr->second.cluster_Phi;
+		_BECAL_x[_BECAL_nclusters] = itr->second.cluster_X;
+		_BECAL_y[_BECAL_nclusters] = itr->second.cluster_Y;
+		_BECAL_z[_BECAL_nclusters] = itr->second.cluster_Z;
+		_BECAL_ID[_BECAL_nclusters] = itr->second.cluster_trueID;
+		_BECAL_NtrueID[_BECAL_nclusters] = itr->second.cluster_NtrueID;
+		_BECAL_nclusters++;
+		}		
+	}
 
-		_EEMC_nclusters = 0;
-		map<int, clustersStrct>::iterator itr2;
-		for (itr2 = EEMC_cluster.begin(); itr2 != EEMC_cluster.end(); ++itr2) {
-			if(itr2->second.cluster_E > emin){
-			_EEMC_E[_EEMC_nclusters] =  itr2->second.cluster_E;
-			_EEMC_Eta[_EEMC_nclusters] = itr2->second.cluster_Eta;
-			_EEMC_Phi[_EEMC_nclusters] = itr2->second.cluster_Phi;
-			_EEMC_x[_EEMC_nclusters] = itr2->second.cluster_X;
-			_EEMC_y[_EEMC_nclusters] = itr2->second.cluster_Y;
-			_EEMC_z[_EEMC_nclusters] = itr2->second.cluster_Z;
-			_EEMC_ID[_EEMC_nclusters] = itr2->second.cluster_trueID;
-			_EEMC_NtrueID[_EEMC_nclusters] = itr2->second.cluster_NtrueID;
-			_EEMC_nclusters++;	
-			}	
-		}
+	_EEMC_nclusters = 0;
+	map<int, clustersStrct>::iterator itr2;
+	for (itr2 = EEMC_cluster.begin(); itr2 != EEMC_cluster.end(); ++itr2) {
+		if(itr2->second.cluster_E > emin){
+		_EEMC_E[_EEMC_nclusters] =  itr2->second.cluster_E;
+		_EEMC_Eta[_EEMC_nclusters] = itr2->second.cluster_Eta;
+		_EEMC_Phi[_EEMC_nclusters] = itr2->second.cluster_Phi;
+		_EEMC_x[_EEMC_nclusters] = itr2->second.cluster_X;
+		_EEMC_y[_EEMC_nclusters] = itr2->second.cluster_Y;
+		_EEMC_z[_EEMC_nclusters] = itr2->second.cluster_Z;
+		_EEMC_ID[_EEMC_nclusters] = itr2->second.cluster_trueID;
+		_EEMC_NtrueID[_EEMC_nclusters] = itr2->second.cluster_NtrueID;
+		_EEMC_nclusters++;	
+		}	
+	}
 
-		_FEMC_nclusters = 0;
-		map<int, clustersStrct>::iterator itr3;
-		for (itr3 = FEMC_cluster.begin(); itr3 != FEMC_cluster.end(); ++itr3) {
-			if(itr3->second.cluster_E > emin){
-			_FEMC_E[_FEMC_nclusters] =  itr3->second.cluster_E;
-			_FEMC_Eta[_FEMC_nclusters] = itr3->second.cluster_Eta;
-			_FEMC_Phi[_FEMC_nclusters] = itr3->second.cluster_Phi;
-			_FEMC_x[_FEMC_nclusters] = itr3->second.cluster_X;
-			_FEMC_y[_FEMC_nclusters] = itr3->second.cluster_Y;
-			_FEMC_z[_FEMC_nclusters] = itr3->second.cluster_Z;
-			_FEMC_ID[_FEMC_nclusters] = itr3->second.cluster_trueID;
-			_FEMC_NtrueID[_FEMC_nclusters] = itr3->second.cluster_NtrueID;
-			_FEMC_nclusters++;		
-		}
-		}
-
+	_FEMC_nclusters = 0;
+	map<int, clustersStrct>::iterator itr3;
+	for (itr3 = FEMC_cluster.begin(); itr3 != FEMC_cluster.end(); ++itr3) {
+		if(itr3->second.cluster_E > emin){
+		_FEMC_E[_FEMC_nclusters] =  itr3->second.cluster_E;
+		_FEMC_Eta[_FEMC_nclusters] = itr3->second.cluster_Eta;
+		_FEMC_Phi[_FEMC_nclusters] = itr3->second.cluster_Phi;
+		_FEMC_x[_FEMC_nclusters] = itr3->second.cluster_X;
+		_FEMC_y[_FEMC_nclusters] = itr3->second.cluster_Y;
+		_FEMC_z[_FEMC_nclusters] = itr3->second.cluster_Z;
+		_FEMC_ID[_FEMC_nclusters] = itr3->second.cluster_trueID;
+		_FEMC_NtrueID[_FEMC_nclusters] = itr3->second.cluster_NtrueID;
+		_FEMC_nclusters++;		
+	}
+	}
 		double res_track = 0.02;
-
 		if(_EEMC_nclusters>1){
-
 			for(int n=0; n<_EEMC_nclusters; n++)
 
 				if( fabs( (_EEMC_Eta[n] - Electron.Eta() )/Electron.Eta()) < res_track &&  fabs((_EEMC_Phi[n] - Electron.Phi())/Electron.Phi() )  < res_track && _EEMC_Eta[n] < -2.  && _EEMC_Eta[n] > -3.5 ){
 				
-					/*double pt = _EEMC_E[n]/cosh(_EEMC_Eta[n] );
-          			double px = pt * cos(_EEMC_Phi[n]);
-          			double py = pt * sin(_EEMC_Phi[n]);
-         			double pz = pt * sinh(_EEMC_Eta[n]);*/
-         	      	double pp 	 = sqrt(_EEMC_E[n]*_EEMC_E[n] - me*me);
+        	      	double pp 	 = sqrt(_EEMC_E[n]*_EEMC_E[n] - me*me);
 					double theta = 2*atan(exp(-_EEMC_Eta[n]));
 
 					double px = pp*sin(theta)*cos(_EEMC_Phi[n]);
@@ -543,11 +536,9 @@ void jpsi(
 		//====== Rapidity 
 		_xv     = (_Q2MC + JPsi.M())/(2*ProtonBeam*(ElectronBeam - eeHepmc));
 		_xvMC   = (_Q2  + JpsiHepmc.M())/(2*ProtonBeam*(ElectronBeam - Electron));
-
+	}
 		track++;
 	
-		//f (Q2MClepton<5.) continue;
-
 
 	  	EvTree->Fill();
     	//if (i>10000) break;

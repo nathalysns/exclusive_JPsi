@@ -138,7 +138,7 @@
 #include <calobase/RawCluster.h>
 #include <calobase/RawClusterContainer.h>
 
-
+#include "g4eval/CaloRawTowerEval.h"
 
 using namespace std;
 
@@ -153,6 +153,19 @@ using namespace std;
 
 excl_ana::excl_ana(const std::string &name):
  SubsysReco(name)
+ , _caloevalstackFHCAL(nullptr)
+  , _caloevalstackBECAL(nullptr)
+  , _caloevalstackHCALIN(nullptr)
+  , _caloevalstackHCALOUT(nullptr)
+  , _caloevalstackEHCAL(nullptr)
+  , _caloevalstackDRCALO(nullptr)
+  , _caloevalstackFOCAL(nullptr)
+  , _caloevalstackLFHCAL(nullptr)
+  , _caloevalstackFEMC(nullptr)
+  , _caloevalstackCEMC(nullptr)
+  , _caloevalstackEEMC(nullptr)
+  , _caloevalstackEEMCG(nullptr)
+ , _strict(false)
 {
 
   unsigned int seed = PHRandomSeed();  // fixed seed is handled in this funtcion
@@ -163,6 +176,18 @@ excl_ana::excl_ana(const std::string &name):
   initializeVariables();
   initializeTrees();
 
+  _reco_e_threshold[kFHCAL]   = 0.05;
+  _reco_e_threshold[kFEMC]    = 0.005;
+  _reco_e_threshold[kDRCALO]  = 0.0;
+  _reco_e_threshold[kFOCAL]  = 0.0;
+  _reco_e_threshold[kEEMC]    = 0.005;
+  _reco_e_threshold[kCEMC]    = 0.01;
+  _reco_e_threshold[kEHCAL]   = 0.05;
+  _reco_e_threshold[kHCALIN]  = 0.01;
+  _reco_e_threshold[kHCALOUT] = 0.05;
+  _reco_e_threshold[kLFHCAL]  = 0.001;
+  _reco_e_threshold[kEEMCG]   = 0.005;
+  _reco_e_threshold[kBECAL]   = 0.001;
 
 }
 
@@ -178,9 +203,7 @@ void excl_ana::SetOutputFile(TString outfilename) {
 excl_ana::~excl_ana()
 {
   delete tree;
-if(_caloevalstackCEMC) delete _caloevalstackCEMC;
-if(_caloevalstackFEMC) delete _caloevalstackFEMC;
-if(_caloevalstackEEMC) delete _caloevalstackEEMC;
+
 if(_svtxEvalStack) delete _svtxEvalStack;
   gsl_rng_free(m_RandomGenerator);
 
@@ -225,83 +248,40 @@ int excl_ana::process_event(PHCompositeNode *topNode)
 
 
 //=========================
-
-
-PHG4TruthInfoContainer* truthinfocontainer = findNode::getClass<PHG4TruthInfoContainer>(topNode,"G4TruthInfo");
-
-
-PHG4Particle* primary;
-
-int pid, barcode;
-//cout << "======================================================" << endl;
-for(int kk=0;kk<truthinfocontainer->GetNumPrimaryVertexParticles();kk++){
-	primary = truthinfocontainer->GetPrimaryParticle(kk+1);
-	pid     = primary->get_pid();
-	barcode = primary->get_barcode();
-
-	if(pid == 11 && barcode == 10009){
-		_EMJpsi_px = primary->get_px();
-		_EMJpsi_py = primary->get_py();
-		_EMJpsi_pz = primary->get_pz();
-		_EMJpsi_e  = primary->get_e();
-	}
-	if(pid == -11 && barcode == 10008){
-		_EPJpsi_px = primary->get_px();
-                _EPJpsi_py = primary->get_py();
-                _EPJpsi_pz = primary->get_pz();
-                _EPJpsi_e  = primary->get_e();
-	}
-	if(pid == 2212  && barcode == 10007){
-                _P_px = primary->get_px();
-                _P_py = primary->get_py();
-                _P_pz = primary->get_pz();
-                _P_e  = primary->get_e();
-        }
-
-	if(pid == 11 && barcode == 10002){
-                _E_px = primary->get_px();
-                _E_py = primary->get_py();
-                _E_pz = primary->get_pz();
-                _E_e  = primary->get_e();
-        }	
-}
-
+/*
 _nMCPart = 0;
+PHG4TruthInfoContainer* truthinfocontainer = findNode::getClass<PHG4TruthInfoContainer>(topNode,"G4TruthInfo");
 
 if (truthinfocontainer){
    PHG4TruthInfoContainer::ConstRange range = truthinfocontainer->GetParticleRange();
-  
+
     for (PHG4TruthInfoContainer::ConstIterator truth_itr = range.first; truth_itr != range.second; ++truth_itr){
      PHG4Particle* g4particle = truth_itr->second;
      if (!g4particle) continue;
-     if (g4particle->get_e() < 1.) continue;    
- 
-     _mcpart_ID[_nMCPart] = g4particle->get_track_id();
-     _mcpart_ID_parent[_nMCPart] = g4particle->get_parent_id();
-     _mcpart_PDG[_nMCPart] = g4particle->get_pid();
-     _mcpart_E[_nMCPart] = g4particle->get_e();
-     _mcpart_px[_nMCPart] = g4particle->get_px();
-     _mcpart_py[_nMCPart] = g4particle->get_py();
-     _mcpart_pz[_nMCPart] = g4particle->get_pz();
+     if (g4particle->get_e() < 2) continue;
+     if (  g4particle->get_pid() <-12 && g4particle->get_pid() > 2500) continue;
+    	_mcpart_ID[_nMCPart] = g4particle->get_track_id();
+     	_mcpart_ID_parent[_nMCPart] = g4particle->get_parent_id();
+     	_mcpart_PDG[_nMCPart] = g4particle->get_pid();
+     	_mcpart_E[_nMCPart] = g4particle->get_e();
+     	_mcpart_px[_nMCPart] = g4particle->get_px();
+     	_mcpart_py[_nMCPart] = g4particle->get_py();
+     	_mcpart_pz[_nMCPart] = g4particle->get_pz();
 
-     _mcpart_BCID[_nMCPart] = g4particle->get_barcode();
+     	_mcpart_BCID[_nMCPart] = g4particle->get_barcode();
 
-     _nMCPart++;
+     	_nMCPart++;
     }
 }else{
-     cout << PHWHERE << " PHG4TruthInfoContainer node not found on node tree" << endl;
-     return 0;
-}
-
-
+     	cout << PHWHERE << " PHG4TruthInfoContainer node not found on node tree" << endl;
+}*/
 
 // ========= lopping over HEPMC Particles =============================================//
 
 PHHepMCGenEventMap* hepmceventmap = findNode::getClass<PHHepMCGenEventMap>(topNode, "PHHepMCGenEventMap");
 
+ _nHepmcp = 0 ;
 if (hepmceventmap){
-
-  int _nHepmcp = 0 ;
   if (Verbosity() > 0) cout << "saving HepMC output" << endl;
 
   for (PHHepMCGenEventMap::ConstIter eventIter = hepmceventmap->begin(); eventIter != hepmceventmap->end(); ++eventIter){
@@ -356,9 +336,10 @@ else {
   return 0;
 }
 
+
 //========== trackinf ====================================//
-int _nTracks = 0;
-int _nProjections = 0;  
+_nTracks = 0;
+_nProjections = 0;  
 // Loop over track maps, identifiy each source.
 // Although this configuration is fixed here, it doesn't require multiple sources.// It will only store them if they're available.
 
@@ -456,13 +437,705 @@ for (const auto& trackMapInfo : trackMapInfo){
  _maxNProjections = _nProjections;
  _maxNTracks = _nTracks;
 
-
-
 //===================================================== B0
 
-  process_B0(topNode);
-  process_RomanPots(topNode,1);
-  process_ZDC(topNode);
+ process_B0(topNode);
+ process_RomanPots(topNode,1);
+ process_ZDC(topNode);
+
+  //----------------------
+  //    TOWERS FHCAL
+  //----------------------
+
+
+  CaloEvalStack* _caloevalstackFHCAL;
+  _caloevalstackFHCAL = new CaloEvalStack(topNode, "FHCAL");
+  _caloevalstackFHCAL->set_strict(_strict);
+  _caloevalstackFHCAL->set_verbosity(Verbosity() + 1);
+
+  CaloRawTowerEval* towerevalFHCAL = _caloevalstackFHCAL->get_rawtower_eval();
+  _nTowers_FHCAL = 0;
+ 
+  for (Int_t itow = 0; itow < _maxNTowers; itow++)
+  {
+    _tower_FHCAL_E[itow] = 0;
+    _tower_FHCAL_iEta[itow] = 0;
+    _tower_FHCAL_iPhi[itow] = 0;
+    _tower_FHCAL_trueID[itow] = 0;
+  }
+
+  string towernodeFHCAL = "TOWER_CALIB_FHCAL";
+  RawTowerContainer* towersFHCAL = findNode::getClass<RawTowerContainer>(topNode, towernodeFHCAL.c_str());
+  if (towersFHCAL)
+  {
+    if (Verbosity() > 0)
+    {
+      cout << "saving HCAL towers" << endl;
+    }
+    string towergeomnodeFHCAL = "TOWERGEOM_FHCAL";
+    RawTowerGeomContainer* towergeomFHCAL = findNode::getClass<RawTowerGeomContainer>(topNode, towergeomnodeFHCAL.c_str());
+    if (towergeomFHCAL)
+    {
+        RawTowerContainer::ConstRange begin_end = towersFHCAL->getTowers();
+        RawTowerContainer::ConstIterator rtiter;
+        for (rtiter = begin_end.first; rtiter != begin_end.second; ++rtiter)
+        {
+          RawTower* tower = rtiter->second;
+          if (tower)
+          {
+            if (tower->get_energy() < _reco_e_threshold[kFHCAL]) continue;
+
+            _tower_FHCAL_iEta[_nTowers_FHCAL] = tower->get_bineta();
+            _tower_FHCAL_iPhi[_nTowers_FHCAL] = tower->get_binphi();
+            _tower_FHCAL_E[_nTowers_FHCAL] = tower->get_energy();
+	
+	    PHG4Particle* primary = towerevalFHCAL->max_truth_primary_particle_by_energy(tower);
+            if (primary)
+            {
+              _tower_FHCAL_trueID[_nTowers_FHCAL] = primary->get_track_id();
+	     }
+            else
+            {
+              _tower_FHCAL_trueID[_nTowers_FHCAL] = -10;
+            }
+            _nTowers_FHCAL++;
+          }
+        }
+      }
+      else
+      {
+        if (Verbosity() > 0)
+        {
+          cout << PHWHERE << " ERROR: Can't find " << towergeomnodeFHCAL << endl;
+        }
+        }
+      if (Verbosity() > 0)
+      {
+        cout << "saved\t" << _nTowers_FHCAL << "\tFHCAL towers" << endl;
+      }
+    }
+    else
+    {
+      if (Verbosity() > 0)
+      {
+        cout << PHWHERE << " ERROR: Can't find " << towernodeFHCAL << endl;
+      }
+  } 
+
+  //----------------------
+  //  TOWERS BECAL
+  //----------------------
+
+    if (!_caloevalstackBECAL)
+    {
+      _caloevalstackBECAL = new CaloEvalStack(topNode, "BECAL");
+      _caloevalstackBECAL->set_strict(_strict);
+      _caloevalstackBECAL->set_verbosity(Verbosity() + 1);
+    }
+    else
+    {
+      _caloevalstackBECAL->next_event(topNode);
+    }
+   //========= initial
+    _nTowers_BECAL = 0;
+    for (Int_t itow = 0; itow < _maxNTowers; itow++)
+    {
+      _tower_BECAL_E[itow] = 0;
+      _tower_BECAL_iEta[itow] = 0;
+      _tower_BECAL_iPhi[itow] = 0;
+      _tower_BECAL_trueID[itow] = 0;
+    }
+
+
+    CaloRawTowerEval* towerevalBECAL = _caloevalstackBECAL->get_rawtower_eval();
+    _nTowers_BECAL = 0;
+    string towernodeBECAL = "TOWER_CALIB_BECAL";
+    RawTowerContainer* towersBECAL = findNode::getClass<RawTowerContainer>(topNode, towernodeBECAL.c_str());
+    
+    if (Verbosity() > 0)
+    {
+      RawTowerContainer* towersBECAL1 = findNode::getClass<RawTowerContainer>(topNode, "TOWER_RAW_BECAL");
+      RawTowerContainer* towersBECAL2 = findNode::getClass<RawTowerContainer>(topNode, "TOWER_SIM_BECAL");
+      cout << "BECAL sim: " << towersBECAL2->size() << endl;
+      cout << "BECAL raw: " << towersBECAL1->size() << endl;
+      cout << "BECAL calib: " << towersBECAL->size() << endl;
+    }
+    if (towersBECAL)
+    {
+      if (Verbosity() > 0)
+      {
+        cout << "saving BECAL towers" << endl;
+      }
+      string towergeomnodeBECAL = "TOWERGEOM_BECAL";
+      RawTowerGeomContainer* towergeomBECAL = findNode::getClass<RawTowerGeomContainer>(topNode, towergeomnodeBECAL.c_str());
+      if (towergeomBECAL)
+      {
+       RawTowerContainer::ConstRange begin_end = towersBECAL->getTowers();
+       RawTowerContainer::ConstIterator rtiter;
+       for (rtiter = begin_end.first; rtiter != begin_end.second; ++rtiter)
+       {
+          RawTower* tower = rtiter->second;
+          if (tower)
+          {
+	     // min energy cut
+	      if (tower->get_energy() < _reco_e_threshold[kBECAL]) continue;
+            _tower_BECAL_iEta[_nTowers_BECAL] = tower->get_bineta();
+            _tower_BECAL_iPhi[_nTowers_BECAL] = tower->get_binphi();
+            _tower_BECAL_E[_nTowers_BECAL] = tower->get_energy();
+
+            PHG4Particle* primary = towerevalBECAL->max_truth_primary_particle_by_energy(tower);
+            if (primary)
+            {
+              _tower_BECAL_trueID[_nTowers_BECAL] = primary->get_track_id();
+            }
+            else
+            {
+              _tower_BECAL_trueID[_nTowers_BECAL] = -10;
+            }
+            _nTowers_BECAL++;
+          }
+        }
+      }
+      else
+      {
+        if (Verbosity() > 0)
+        {
+          cout << PHWHERE << " ERROR: Can't find " << towergeomnodeBECAL << endl;
+        }
+     }
+      if (Verbosity() > 0)
+      {
+        cout << "saved\t" << _nTowers_BECAL << "\tBECAL towers" << endl;
+      }
+    }
+    else
+    {
+      if (Verbosity() > 0)
+      {
+        cout << PHWHERE << " ERROR: Can't find " << towernodeBECAL << endl;
+      }
+   }
+
+  //----------------------
+  //    TOWERS HCALIN
+  //----------------------
+   _nTowers_HCALIN = 0;
+    for (Int_t itow = 0; itow < _maxNTowers; itow++)
+    {
+      _tower_HCALIN_E[itow] = 0;
+      _tower_HCALIN_iEta[itow] = 0;
+      _tower_HCALIN_iPhi[itow] = 0;
+      _tower_HCALIN_trueID[itow] = 0;
+    }
+    if (!_caloevalstackHCALIN)
+    {
+      _caloevalstackHCALIN = new CaloEvalStack(topNode, "HCALIN");
+      _caloevalstackHCALIN->set_strict(_strict);
+      _caloevalstackHCALIN->set_verbosity(Verbosity() + 1);
+    }
+    else
+    {
+      _caloevalstackHCALIN->next_event(topNode);
+    } 
+  
+   CaloRawTowerEval* towerevalHCALIN = _caloevalstackHCALIN->get_rawtower_eval();
+   string towernodeHCALIN = "TOWER_CALIB_HCALIN";
+   RawTowerContainer* towersHCALIN = findNode::getClass<RawTowerContainer>(topNode, towernodeHCALIN.c_str());
+   if (towersHCALIN)
+    {
+      if (Verbosity() > 0)
+      {
+        cout << "saving HCAL towers" << endl;
+      }
+      string towergeomnodeHCALIN = "TOWERGEOM_HCALIN";
+      RawTowerGeomContainer* towergeomHCALIN = findNode::getClass<RawTowerGeomContainer>(topNode, towergeomnodeHCALIN.c_str());
+      if (towergeomHCALIN)
+      {
+	RawTowerContainer::ConstRange begin_end = towersHCALIN->getTowers();
+        RawTowerContainer::ConstIterator rtiter;
+        for (rtiter = begin_end.first; rtiter != begin_end.second; ++rtiter)
+        {
+          RawTower* tower = rtiter->second;
+          if (tower)
+          {
+	    // min energy cut
+	    if (tower->get_energy() < _reco_e_threshold[kHCALIN]) continue;
+            _tower_HCALIN_iEta[_nTowers_HCALIN] = tower->get_bineta();
+            _tower_HCALIN_iPhi[_nTowers_HCALIN] = tower->get_binphi();
+            _tower_HCALIN_E[_nTowers_HCALIN] = tower->get_energy();
+	
+	    PHG4Particle* primary = towerevalHCALIN->max_truth_primary_particle_by_energy(tower);
+            if (primary)
+            {
+              _tower_HCALIN_trueID[_nTowers_HCALIN] = primary->get_track_id();
+	    }
+            else
+            {
+              _tower_HCALIN_trueID[_nTowers_HCALIN] = -10;
+            }
+            _nTowers_HCALIN++;
+          }
+        }
+      }
+      else
+      {
+        if (Verbosity() > 0)
+        {
+          cout << PHWHERE << " ERROR: Can't find " << towergeomnodeHCALIN << endl;
+        }
+       }
+      if (Verbosity() > 0)
+      {
+        cout << "saved\t" << _nTowers_HCALIN << "\tHCALIN towers" << endl;
+      }
+    }
+    else
+    {
+      if (Verbosity() > 0)
+      {
+        cout << PHWHERE << " ERROR: Can't find " << towernodeHCALIN << endl;
+      }
+   }	
+   //----------------------
+   //    TOWERS HCALOUT
+   //----------------------
+   
+    _nTowers_HCALOUT = 0;
+    string towernodeHCALOUT = "TOWER_CALIB_HCALOUT";
+    RawTowerContainer* towersHCALOUT = findNode::getClass<RawTowerContainer>(topNode, towernodeHCALOUT.c_str());
+
+    if (!_caloevalstackHCALOUT)
+    {
+      _caloevalstackHCALOUT = new CaloEvalStack(topNode, "HCALOUT");
+      _caloevalstackHCALOUT->set_strict(_strict);
+      _caloevalstackHCALOUT->set_verbosity(Verbosity() + 1);
+    }
+    else
+    {
+      _caloevalstackHCALOUT->next_event(topNode);
+    }
+
+    if (towersHCALOUT)
+    {
+      if (Verbosity() > 0)
+      {
+        cout << "saving HCAL towers" << endl;
+      }
+      string towergeomnodeHCALOUT = "TOWERGEOM_HCALOUT";
+      RawTowerGeomContainer* towergeomHCALOUT = findNode::getClass<RawTowerGeomContainer>(topNode, towergeomnodeHCALOUT.c_str());
+      CaloRawTowerEval* towerevalHCALOUT = _caloevalstackHCALOUT->get_rawtower_eval();
+      if (towergeomHCALOUT)
+      {
+        RawTowerContainer::ConstRange begin_end = towersHCALOUT->getTowers();
+        RawTowerContainer::ConstIterator rtiter;
+        for (rtiter = begin_end.first; rtiter != begin_end.second; ++rtiter)
+        {
+          RawTower* tower = rtiter->second;
+          if (tower)
+          {
+ 	   // min energy cut
+ 	   if (tower->get_energy() < _reco_e_threshold[kHCALOUT]) continue;
+            _tower_HCALOUT_iEta[_nTowers_HCALOUT] = tower->get_bineta();
+            _tower_HCALOUT_iPhi[_nTowers_HCALOUT] = tower->get_binphi();
+            _tower_HCALOUT_E[_nTowers_HCALOUT] = tower->get_energy();
+
+	    PHG4Particle* primary = towerevalHCALOUT->max_truth_primary_particle_by_energy(tower);
+            if (primary)
+            {
+              _tower_HCALOUT_trueID[_nTowers_HCALOUT] = primary->get_track_id();
+	    }
+            else
+            {
+              _tower_HCALOUT_trueID[_nTowers_HCALOUT] = -10;
+            }
+
+            _nTowers_HCALOUT++;
+          }
+        }
+      }
+      else
+      {
+        if (Verbosity() > 0)
+        {
+          cout << PHWHERE << " ERROR: Can't find " << towergeomnodeHCALOUT << endl;
+        }
+       }
+      if (Verbosity() > 0)
+      {
+        cout << "saved\t" << _nTowers_HCALOUT << "\tHCALOUT towers" << endl;
+      }
+    }
+    else
+    {
+      if (Verbosity() > 0)
+      {
+        cout << PHWHERE << " ERROR: Can't find " << towernodeHCALOUT << endl;
+      }
+   }
+
+  //----------------------
+  //    TOWERS EHCAL
+  //----------------------
+
+    _nTowers_EHCAL = 0;
+    if (!_caloevalstackEHCAL)
+    {
+      _caloevalstackEHCAL = new CaloEvalStack(topNode, "EHCAL");
+      _caloevalstackEHCAL->set_strict(_strict);
+      _caloevalstackEHCAL->set_verbosity(Verbosity() + 1);
+    }
+    else
+    {
+      _caloevalstackEHCAL->next_event(topNode);
+    }
+
+    string towernodeEHCAL = "TOWER_CALIB_EHCAL";
+    RawTowerContainer* towersEHCAL = findNode::getClass<RawTowerContainer>(topNode, towernodeEHCAL.c_str());
+    if (towersEHCAL)
+    {
+      if (Verbosity() > 0)
+      {
+        cout << "saving HCAL towers" << endl;
+      }
+      string towergeomnodeEHCAL = "TOWERGEOM_EHCAL";
+      RawTowerGeomContainer* towergeomEHCAL = findNode::getClass<RawTowerGeomContainer>(topNode, towergeomnodeEHCAL.c_str());
+      CaloRawTowerEval* towerevalEHCAL = _caloevalstackEHCAL->get_rawtower_eval();
+      if (towergeomEHCAL)
+      {
+	RawTowerContainer::ConstRange begin_end = towersEHCAL->getTowers();
+        RawTowerContainer::ConstIterator rtiter;
+        for (rtiter = begin_end.first; rtiter != begin_end.second; ++rtiter)
+        {
+          RawTower* tower = rtiter->second;
+          if (tower)
+          {
+	    // min energy cut
+	    if (tower->get_energy() < _reco_e_threshold[kEHCAL]) continue;
+            _tower_EHCAL_iEta[_nTowers_EHCAL] = tower->get_bineta();
+            _tower_EHCAL_iPhi[_nTowers_EHCAL] = tower->get_binphi();
+            _tower_EHCAL_E[_nTowers_EHCAL] = tower->get_energy();
+
+	    PHG4Particle* primary = towerevalEHCAL->max_truth_primary_particle_by_energy(tower);
+            if (primary)
+            {
+              _tower_EHCAL_trueID[_nTowers_EHCAL] = primary->get_track_id();
+	    }
+            else
+            {
+              _tower_EHCAL_trueID[_nTowers_EHCAL] = -10;
+            }
+
+            _nTowers_EHCAL++;
+          }
+        }
+      }
+      else
+      {
+        if (Verbosity() > 0)
+        {
+          cout << PHWHERE << " ERROR: Can't find " << towergeomnodeEHCAL << endl;
+        }
+      }
+      if (Verbosity() > 0)
+      {
+        cout << "saved\t" << _nTowers_EHCAL << "\tEHCAL towers" << endl;
+      }
+    }
+    else
+    {
+      if (Verbosity() > 0)
+      {
+        cout << PHWHERE << " ERROR: Can't find " << towernodeEHCAL << endl;
+      }
+
+    }
+
+    _nTowers_LFHCAL = 0;
+    if (!_caloevalstackLFHCAL)
+    {
+      _caloevalstackLFHCAL = new CaloEvalStack(topNode, "LFHCAL");
+      _caloevalstackLFHCAL->set_strict(_strict);
+      _caloevalstackLFHCAL->set_verbosity(Verbosity() + 1);
+    }
+    else
+    {
+      _caloevalstackLFHCAL->next_event(topNode);
+    }
+    string towernodeLFHCAL = "TOWER_CALIB_LFHCAL";
+    RawTowerContainer* towersLFHCAL = findNode::getClass<RawTowerContainer>(topNode, towernodeLFHCAL.c_str());
+    if (Verbosity() > 1) 
+      std::cout << "reading towers: "<< towersLFHCAL->size() << std::endl;
+    if (towersLFHCAL)
+    {
+      if (Verbosity() > 0)
+      {
+        cout << "saving LFHCAL towers" << endl;
+      }
+      string towergeomnodeLFHCAL = "TOWERGEOM_LFHCAL";
+      RawTowerGeomContainer* towergeomLFHCAL = findNode::getClass<RawTowerGeomContainer>(topNode, towergeomnodeLFHCAL.c_str());
+      CaloRawTowerEval* towerevalLFHCAL = _caloevalstackLFHCAL->get_rawtower_eval();
+      if (towergeomLFHCAL)
+      {
+         if (Verbosity() > 0)
+        {
+          cout << "found LFHCAL geom" << endl;
+        }
+
+        RawTowerContainer::ConstRange begin_end = towersLFHCAL->getTowers();
+        RawTowerContainer::ConstIterator rtiter;
+        
+        for (rtiter = begin_end.first; rtiter != begin_end.second; ++rtiter)
+        {
+          RawTower* tower = rtiter->second;
+          if (tower)
+          {
+	    if (tower->get_energy() < _reco_e_threshold[kLFHCAL]) continue; 
+            if (Verbosity() > 1) cout << "\n event eval: \t" << tower->get_energy()<< "\t ieta: " << tower->get_bineta()<< "\t iphi: " << tower->get_binphi() << "\t iZ: " << tower->get_binl()<< endl;
+            _tower_LFHCAL_iEta[_nTowers_LFHCAL] = tower->get_bineta();
+            _tower_LFHCAL_iPhi[_nTowers_LFHCAL] = tower->get_binphi();
+            _tower_LFHCAL_iL[_nTowers_LFHCAL] = tower->get_binl();
+            _tower_LFHCAL_E[_nTowers_LFHCAL] = tower->get_energy();
+
+	    PHG4Particle* primary = towerevalLFHCAL->max_truth_primary_particle_by_energy(tower);
+            if (primary)
+            {
+              _tower_LFHCAL_trueID[_nTowers_LFHCAL] = primary->get_track_id();
+	    }
+            else
+            {
+              _tower_LFHCAL_trueID[_nTowers_LFHCAL] = -10;
+            }
+
+            _nTowers_LFHCAL++;
+          }
+        }
+      }
+      else
+      {
+        if (Verbosity() > 0)
+        {
+          cout << PHWHERE << " ERROR: Can't find " << towergeomnodeLFHCAL << endl;
+        }
+      }
+      if (Verbosity() > 0)
+      {
+        cout << "saved\t" << _nTowers_LFHCAL << "\tLFHCAL towers" << endl;
+      }
+    }
+    else
+    {
+      if (Verbosity() > 0)
+      {
+        cout << PHWHERE << " ERROR: Can't find " << towernodeLFHCAL << endl;
+      }
+    }
+   //----------------------
+   //    TOWERS FEMC
+   //---------------------
+
+    _nTowers_FEMC = 0;
+    if (!_caloevalstackFEMC)
+    {
+      _caloevalstackFEMC = new CaloEvalStack(topNode, "FEMC");
+      _caloevalstackFEMC->set_strict(_strict);
+      _caloevalstackFEMC->set_verbosity(Verbosity() + 1);
+    }
+    else
+    {
+      _caloevalstackFEMC->next_event(topNode);
+    }
+    string towernodeFEMC = "TOWER_CALIB_FEMC";
+    RawTowerContainer* towersFEMC = findNode::getClass<RawTowerContainer>(topNode, towernodeFEMC.c_str());
+    if (towersFEMC)
+    {
+      if (Verbosity() > 0)
+      {
+        cout << "saving EMC towers" << endl;
+      }
+      string towergeomnodeFEMC = "TOWERGEOM_FEMC";
+      CaloRawTowerEval* towerevalFEMC = _caloevalstackFEMC->get_rawtower_eval();
+      RawTowerContainer::ConstRange begin_end = towersFEMC->getTowers();
+        RawTowerContainer::ConstIterator rtiter;
+        for (rtiter = begin_end.first; rtiter != begin_end.second; ++rtiter)
+        {
+          RawTower* tower = rtiter->second;
+          if (tower)
+          {
+	    // min energy cut
+	    if (tower->get_energy() < _reco_e_threshold[kFEMC]) continue;
+
+            _tower_FEMC_iEta[_nTowers_FEMC] = tower->get_bineta();
+            _tower_FEMC_iPhi[_nTowers_FEMC] = tower->get_binphi();
+            _tower_FEMC_E[_nTowers_FEMC] = tower->get_energy();
+  	     PHG4Particle* primary = towerevalFEMC->max_truth_primary_particle_by_energy(tower);
+            if (primary)
+            {
+              _tower_FEMC_trueID[_nTowers_FEMC] = primary->get_track_id();
+	     }
+            else
+            {
+              _tower_FEMC_trueID[_nTowers_FEMC] = -10;
+            }
+	    	    
+	     _nTowers_FEMC++;
+          }
+        }
+    }
+    else
+    {
+      if (Verbosity() > 0)
+      {
+        cout << PHWHERE << " ERROR: Can't find " << towernodeFEMC << endl;
+      }
+    }
+   
+  //----------------------
+  //    TOWERS EEMC
+  //----------------------
+
+    _nTowers_EEMC = 0;
+    if (!_caloevalstackEEMC)
+    {
+      _caloevalstackEEMC = new CaloEvalStack(topNode, "EEMC");
+      _caloevalstackEEMC->set_strict(_strict);
+      _caloevalstackEEMC->set_verbosity(Verbosity() + 1);
+    }
+    else
+    {
+      _caloevalstackEEMC->next_event(topNode);
+    }
+    string towernodeEEMC = "TOWER_CALIB_EEMC";
+    RawTowerContainer* towersEEMC = findNode::getClass<RawTowerContainer>(topNode, towernodeEEMC.c_str());
+    if (towersEEMC)
+    {
+      if (Verbosity() > 0)
+      {
+        cout << "saving EMC towers" << endl;
+      }
+      string towergeomnodeEEMC = "TOWERGEOM_EEMC";
+      RawTowerGeomContainer* towergeom = findNode::getClass<RawTowerGeomContainer>(topNode, towergeomnodeEEMC.c_str());
+      CaloRawTowerEval* towerevalEEMC = _caloevalstackEEMC->get_rawtower_eval();
+      if (towergeom)
+      {
+      RawTowerContainer::ConstRange begin_end = towersEEMC->getTowers();
+        RawTowerContainer::ConstIterator rtiter;
+        for (rtiter = begin_end.first; rtiter != begin_end.second; ++rtiter)
+        {
+          RawTower* tower = rtiter->second;
+          if (tower)
+          {
+            if (tower->get_energy() < _reco_e_threshold[kEEMC]) continue;
+
+            _tower_EEMC_iEta[_nTowers_EEMC] = tower->get_bineta();
+            _tower_EEMC_iPhi[_nTowers_EEMC] = tower->get_binphi();
+            _tower_EEMC_E[_nTowers_EEMC] = tower->get_energy();
+	    PHG4Particle* primary = towerevalEEMC->max_truth_primary_particle_by_energy(tower);
+            if (primary)
+            {
+              _tower_EEMC_trueID[_nTowers_EEMC] = primary->get_track_id();
+	    }
+            else
+            {
+              _tower_EEMC_trueID[_nTowers_EEMC] = -10;
+            }
+            _nTowers_EEMC++;
+          }
+        }
+      }
+      else
+      {
+        if (Verbosity() > 0) 
+        {
+	   cout << PHWHERE << " ERROR: Can't find " << towergeomnodeEEMC << endl;
+        }
+      }
+      if (Verbosity() > 0)
+      {
+        cout << "saved\t" << _nTowers_EEMC << "\tEEMC towers" << endl;
+      }
+    }
+    else
+    {
+      if (Verbosity() > 0)
+      {
+        cout << PHWHERE << " ERROR: Can't find " << towernodeEEMC << endl;
+      }
+    }
+   
+  //----------------------
+  //    TOWERS EEMC
+  //----------------------
+  
+  _nTowers_EEMCG = 0;
+  if (!_caloevalstackEEMCG)
+  {
+    _caloevalstackEEMCG = new CaloEvalStack(topNode, "EEMC_glass");
+    _caloevalstackEEMCG->set_strict(_strict);
+    _caloevalstackEEMCG->set_verbosity(Verbosity() + 1);
+  }
+  else
+  {
+    _caloevalstackEEMCG->next_event(topNode);
+  }
+  string towernodeEEMCG = "TOWER_CALIB_EEMC_glass";
+  RawTowerContainer* towersEEMCG = findNode::getClass<RawTowerContainer>(topNode, towernodeEEMCG.c_str());
+  if (towersEEMCG)
+  {
+    if (Verbosity() > 0)
+    {
+      cout << "saving EMC towers" << endl;
+    }
+    string towergeomnodeEEMCG = "TOWERGEOM_EEMC_glass";
+    RawTowerGeomContainer* towergeom = findNode::getClass<RawTowerGeomContainer>(topNode, towergeomnodeEEMCG.c_str());
+    CaloRawTowerEval* towerevalEEMCG = _caloevalstackEEMCG->get_rawtower_eval();
+    if (towergeom)
+    {
+	RawTowerContainer::ConstRange begin_end = towersEEMCG->getTowers();
+        RawTowerContainer::ConstIterator rtiter;
+        for (rtiter = begin_end.first; rtiter != begin_end.second; ++rtiter)
+        {
+          RawTower* tower = rtiter->second;
+          if (tower)
+          {
+	   // min energy cut
+	  if (tower->get_energy() < _reco_e_threshold[kEEMCG]) continue;
+
+           _tower_EEMCG_iEta[_nTowers_EEMCG] = tower->get_bineta();
+           _tower_EEMCG_iPhi[_nTowers_EEMCG] = tower->get_binphi();
+           _tower_EEMCG_E[_nTowers_EEMCG] = tower->get_energy();
+	   PHG4Particle* primary = towerevalEEMCG->max_truth_primary_particle_by_energy(tower);
+           if (primary)
+           {
+             _tower_EEMCG_trueID[_nTowers_EEMCG] = primary->get_track_id();
+	   }
+            else
+            {
+              _tower_EEMCG_trueID[_nTowers_EEMCG] = -10;
+            }
+           _nTowers_EEMCG++;
+         }
+        }
+      }
+      else
+      {
+        if (Verbosity() > 0)
+        {
+          cout << PHWHERE << " ERROR: Can't find " << towergeomnodeEEMCG << endl;
+        }
+      }
+      if (Verbosity() > 0)
+      {
+        cout << "saved\t" << _nTowers_EEMCG << "\tEEMCG towers" << endl;
+      }
+    }
+    else
+    {
+      if (Verbosity() > 0)
+      {
+        cout << PHWHERE << " ERROR: Can't find " << towernodeEEMCG << endl;
+      }
+   }
+
 
   tree->Fill();
 
@@ -497,6 +1170,18 @@ int excl_ana::End(PHCompositeNode *topNode)
   outfile->Write();
   outfile->Close();
   delete outfile;
+  if (_caloevalstackFHCAL) delete _caloevalstackFHCAL;
+  if (_caloevalstackBECAL) delete _caloevalstackBECAL;
+  if (_caloevalstackHCALIN) delete _caloevalstackHCALIN;
+  if (_caloevalstackHCALOUT) delete _caloevalstackHCALOUT;
+  if (_caloevalstackEHCAL) delete _caloevalstackEHCAL;
+  if (_caloevalstackDRCALO) delete _caloevalstackDRCALO;
+  if (_caloevalstackFOCAL) delete _caloevalstackFOCAL;
+  if (_caloevalstackLFHCAL) delete _caloevalstackLFHCAL;
+  if (_caloevalstackFEMC) delete _caloevalstackFEMC;
+  if (_caloevalstackCEMC) delete _caloevalstackCEMC;
+  if (_caloevalstackEEMC) delete _caloevalstackEEMC;
+  if (_caloevalstackEEMCG) delete _caloevalstackEEMCG;
 
   return Fun4AllReturnCodes::EVENT_OK;
 }
@@ -519,42 +1204,23 @@ void excl_ana::Print(const std::string &what) const
 void excl_ana::initializeTrees()
 {
   tree = new TTree("T", "A tree for DVCS");
-  tree->Branch("EMJpsi_px", &_EMJpsi_px, "EMJpsi_px/F");
-  tree->Branch("EMJpsi_py", &_EMJpsi_py, "EMJpsi_py/F");
-  tree->Branch("EMJpsi_pz", &_EMJpsi_pz, "EMJpsi_pz/F");
-  tree->Branch("EMJpsi_e",  &_EMJpsi_e,  "EMJpsi_e/F");
 
-  tree->Branch("EPJpsi_px", &_EPJpsi_px, "EPJpsi_px/F");
-  tree->Branch("EPJpsi_py", &_EPJpsi_py, "EPJpsi_py/F");
-  tree->Branch("EPJpsi_pz", &_EPJpsi_pz, "EPJpsi_pz/F");
-  tree->Branch("EPJpsi_e",  &_EPJpsi_e,  "EPJpsi_e/F");
-
-  tree->Branch("E_px", &_E_px, "E_px/F");
-  tree->Branch("E_py", &_E_py, "E_py/F");
-  tree->Branch("E_pz", &_E_pz, "E_pz/F");
-  tree->Branch("E_e",  &_E_e,  "E_e/F");
-
-  tree->Branch("P_px", &_P_px, "P_px/F");
-  tree->Branch("P_py", &_P_py, "P_py/F");
-  tree->Branch("P_pz", &_P_pz, "P_pz/F");
-  tree->Branch("P_e",  &_P_e,  "P_e/F");
-
-  tree->Branch("maxNHepmcp", &_maxNHepmcp, "maxNHepmcp/I");
-  tree->Branch("hepmcp_BCID", _hepmcp_BCID, "hepmcp_BCID[maxNHepmcp]/I");
-  tree->Branch("hepmcp_status", _hepmcp_status, "hepmcp_status[maxNHepmcp]/I");
-  tree->Branch("hepmcp_PDG", _hepmcp_PDG, "hepmcp_PDG[maxNHepmcp]/I");
-  tree->Branch("hepmcp_E", _hepmcp_E, "hepmcp_E[maxNHepmcp]/F");
-  tree->Branch("hepmcp_px", _hepmcp_px, "hepmcp_px[maxNHepmcp]/F");
-  tree->Branch("hepmcp_py", _hepmcp_py, "hepmcp_py[maxNHepmcp]/F");
-  tree->Branch("hepmcp_pz", _hepmcp_pz, "hepmcp_pz[maxNHepmcp]/F");
-  tree->Branch("hepmcp_m1", _hepmcp_m1, "hepmcp_m1[maxNHepmcp]/I");
-  tree->Branch("hepmcp_m2", _hepmcp_m2, "hepmcp_m2[maxNHepmcp]/I");
+  tree->Branch("nHepmcp", &_nHepmcp, "nHepmcp/I");
+  tree->Branch("hepmcp_BCID", _hepmcp_BCID, "hepmcp_BCID[nHepmcp]/I");
+  tree->Branch("hepmcp_status", _hepmcp_status, "hepmcp_status[nHepmcp]/I");
+  tree->Branch("hepmcp_PDG", _hepmcp_PDG, "hepmcp_PDG[nHepmcp]/I");
+  tree->Branch("hepmcp_E", _hepmcp_E, "hepmcp_E[nHepmcp]/F");
+  tree->Branch("hepmcp_px", _hepmcp_px, "hepmcp_px[nHepmcp]/F");
+  tree->Branch("hepmcp_py", _hepmcp_py, "hepmcp_py[nHepmcp]/F");
+  tree->Branch("hepmcp_pz", _hepmcp_pz, "hepmcp_pz[nHepmcp]/F");
+  tree->Branch("hepmcp_m1", _hepmcp_m1, "hepmcp_m1[nHepmcp]/I");
+  tree->Branch("hepmcp_m2", _hepmcp_m2, "hepmcp_m2[nHepmcp]/I");
 
   tree->Branch("hepmcp_x1", &_hepmcp_x1, "hepmcp_x1/F");
   tree->Branch("hepmcp_x2", &_hepmcp_x2, "hepmcp_x2/F");
   tree->Branch("hepmcp_Q2", &_hepmcp_Q2, "hepmcp_Q2/F");
 
-   tree->Branch("nTracks", &_maxNTracks, "nTracks/I");
+   tree->Branch("nTracks", &_nTracks, "nTracks/I");
    tree->Branch("track_ID", _track_ID, "track_ID[nTracks]F");
    tree->Branch("track_trueID", _track_trueID, "track_trueID[nTracks]F");
    tree->Branch("track_px", _track_px, "track_px[nTracks]F");
@@ -562,7 +1228,7 @@ void excl_ana::initializeTrees()
    tree->Branch("track_pz", _track_pz, "track_pz[nTracks]F");
    tree->Branch("track_dca", _track_dca, "track_dca[nTracks]F");
    tree->Branch("track_dca_2d", _track_dca_2d, "track_dca_2d[nTracks]F");
-    tree->Branch("tracks_charge", _track_charge, "tracks_charge[nTracks]/S");
+   tree->Branch("tracks_charge", _track_charge, "tracks_charge[nTracks]/S");
    tree->Branch("track_source", _track_source, "track_source[nTracks]F");
     
    tree->Branch("maxNProjections", &_maxNProjections, "maxNProjections/I");
@@ -616,7 +1282,7 @@ void excl_ana::initializeTrees()
     tree->Branch("ZDCtrPy", _ZDCtrPy, "ZDCtrPy[ZDChits]/F");
     tree->Branch("ZDCtrPz", _ZDCtrPz, "ZDCtrPz[ZDChits]/F");
     tree->Branch("ZDCid", _ZDCid, "ZDCid[ZDChits]/I");
-   
+/*   
     tree->Branch("nMCPart", &_nMCPart, "nMCPart/I");
     tree->Branch("mcpart_ID", _mcpart_ID, "mcpart_ID[nMCPart]/I");
     tree->Branch("mcpart_ID_parent", _mcpart_ID_parent, "mcpart_ID_parent[nMCPart]/I");
@@ -626,6 +1292,48 @@ void excl_ana::initializeTrees()
     tree->Branch("mcpart_py", _mcpart_py, "mcpart_py[nMCPart]/F");
     tree->Branch("mcpart_pz", _mcpart_pz, "mcpart_pz[nMCPart]/F");
     tree->Branch("mcpart_BCID", _mcpart_BCID, "mcpart_BCID[nMCPart]/I");
+*/
+    tree->Branch("tower_FHCAL_N", &_nTowers_FHCAL, "tower_FHCAL_N/I");
+    tree->Branch("tower_FHCAL_E", _tower_FHCAL_E, "tower_FHCAL_E[tower_FHCAL_N]/F");
+    tree->Branch("tower_FHCAL_iEta", _tower_FHCAL_iEta, "tower_FHCAL_iEta[tower_FHCAL_N]/I");
+    tree->Branch("tower_FHCAL_iPhi", _tower_FHCAL_iPhi, "tower_FHCAL_iPhi[tower_FHCAL_N]/I");
+    tree->Branch("tower_FHCAL_trueID", _tower_FHCAL_trueID, "tower_FHCAL_trueID[tower_FHCAL_N]/I");
+
+    tree->Branch("tower_BECAL_N", &_nTowers_BECAL, "tower_BECAL_N/I");
+    tree->Branch("tower_BECAL_E", _tower_BECAL_E, "tower_BECAL_E[tower_BECAL_N]/F");
+    tree->Branch("tower_BECAL_iEta", _tower_BECAL_iEta, "tower_BECAL_iEta[tower_BECAL_N]/I");
+    tree->Branch("tower_BECAL_iPhi", _tower_BECAL_iPhi, "tower_BECAL_iPhi[tower_BECAL_N]/I");
+    tree->Branch("tower_BECAL_trueID", _tower_BECAL_trueID, "tower_BECAL_trueID[tower_BECAL_N]/I");
+
+    tree->Branch("tower_HCALIN_N", &_nTowers_HCALIN, "tower_HCALIN_N/I");
+    tree->Branch("tower_HCALIN_E", _tower_HCALIN_E, "tower_HCALIN_E[tower_HCALIN_N]/F");
+    tree->Branch("tower_HCALIN_iEta", _tower_HCALIN_iEta, "tower_HCALIN_iEta[tower_HCALIN_N]/I");
+    tree->Branch("tower_HCALIN_iPhi", _tower_HCALIN_iPhi, "tower_HCALIN_iPhi[tower_HCALIN_N]/I");
+    tree->Branch("tower_HCALIN_trueID", _tower_HCALIN_trueID, "tower_HCALIN_trueID[tower_HCALIN_N]/I"); 
+ 
+    tree->Branch("tower_HCALOUT_N", &_nTowers_HCALOUT, "tower_HCALOUT_N/I");
+    tree->Branch("tower_HCALOUT_E", _tower_HCALOUT_E, "tower_HCALOUT_E[tower_HCALOUT_N]/F");
+    tree->Branch("tower_HCALOUT_iEta", _tower_HCALOUT_iEta, "tower_HCALOUT_iEta[tower_HCALOUT_N]/I");
+    tree->Branch("tower_HCALOUT_iPhi", _tower_HCALOUT_iPhi, "tower_HCALOUT_iPhi[tower_HCALOUT_N]/I");
+    tree->Branch("tower_HCALOUT_trueID", _tower_HCALOUT_trueID, "tower_HCALOUT_trueID[tower_HCALOUT_N]/I");
+
+    tree->Branch("tower_EHCAL_N", &_nTowers_EHCAL, "tower_EHCAL_N/I");
+    tree->Branch("tower_EHCAL_E", _tower_EHCAL_E, "tower_EHCAL_E[tower_EHCAL_N]/F");
+    tree->Branch("tower_EHCAL_iEta", _tower_EHCAL_iEta, "tower_EHCAL_iEta[tower_EHCAL_N]/I");
+    tree->Branch("tower_EHCAL_iPhi", _tower_EHCAL_iPhi, "tower_EHCAL_iPhi[tower_EHCAL_N]/I");
+    tree->Branch("tower_EHCAL_trueID", _tower_EHCAL_trueID, "tower_EHCAL_trueID[tower_EHCAL_N]/I");
+   
+    tree->Branch("tower_FEMC_N", &_nTowers_FEMC, "tower_FEMC_N/I");
+    tree->Branch("tower_FEMC_E", _tower_FEMC_E, "tower_FEMC_E[tower_FEMC_N]/F");
+    tree->Branch("tower_FEMC_iEta", _tower_FEMC_iEta, "tower_FEMC_iEta[tower_FEMC_N]/I");
+    tree->Branch("tower_FEMC_iPhi", _tower_FEMC_iPhi, "tower_FEMC_iPhi[tower_FEMC_N]/I");
+    tree->Branch("tower_FEMC_trueID", _tower_FEMC_trueID, "tower_FEMC_trueID[tower_FEMC_N]/I");
+
+    tree->Branch("tower_EEMC_N", &_nTowers_EEMC, "tower_EEMC_N/I");
+    tree->Branch("tower_EEMC_E", _tower_EEMC_E, "tower_EEMC_E[tower_EEMC_N]/F");
+    tree->Branch("tower_EEMC_iEta", _tower_EEMC_iEta, "tower_EEMC_iEta[tower_EEMC_N]/I");
+    tree->Branch("tower_EEMC_iPhi", _tower_EEMC_iPhi, "tower_EEMC_iPhi[tower_EEMC_N]/I");
+    tree->Branch("tower_EEMC_trueID", _tower_EEMC_trueID, "tower_EEMC_trueID[tower_EEMC_N]/I");
 
 /*    tree->Branch("vertex_true_x", &_vertex_true_x, "vertex_true_x/F");
     tree->Branch("vertex_true_y", &_vertex_true_y, "vertex_true_y/F");
@@ -696,50 +1404,51 @@ int excl_ana::process_B0(PHCompositeNode* topNode)
   nodename << "G4HIT_" << "b0Truth";
   
   PHG4HitContainer* hits = findNode::getClass<PHG4HitContainer>(topNode, nodename.str().c_str());
-
-  Int_t layer=-1;
+  int layer=-1;
   _B0hits = 0;
   if (hits) {
-  PHG4HitContainer::ConstRange hit_range = hits->getHits();
 
-  PHG4TruthInfoContainer *truthinfo = findNode::getClass<PHG4TruthInfoContainer>(topNode, "G4TruthInfo");
+    PHG4HitContainer::ConstRange hit_range = hits->getHits();
 
-  PHG4TruthInfoContainer::Range range = truthinfo->GetPrimaryParticleRange();  
 
-  for (PHG4HitContainer::ConstIterator hit_iter = hit_range.first; hit_iter != hit_range.second; hit_iter++) {
-
-     	_B0x[_B0hits] = (Float_t)hit_iter->second->get_x(0);
-        _B0y[_B0hits] = (Float_t)hit_iter->second->get_y(0);
-        _B0z[_B0hits] = (Float_t)hit_iter->second->get_z(0);
-
-        _B0pz[_B0hits] = hit_iter->second->get_pz(0);
-        _B0px[_B0hits] = hit_iter->second->get_px(0);
-        _B0py[_B0hits] = hit_iter->second->get_py(0);
-        _B0id[_B0hits] = hit_iter->second->get_hit_id();
-
+    for (PHG4HitContainer::ConstIterator hit_iter = hit_range.first; hit_iter != hit_range.second; hit_iter++) {
+	
+	
+        PHG4TruthInfoContainer *truthinfo = findNode::getClass<PHG4TruthInfoContainer>(topNode, "G4TruthInfo");
 	PHG4Particle* g4particle = truthinfo->GetParticle(hit_iter->second->get_trkid());
-	_B0pid[_B0hits]=0;
-	_B0pid[_B0hits]=g4particle->get_pid();
+	if(!g4particle)	continue;		
+	
+     	_B0x[_B0hits] = hit_iter->second->get_x(0);
+	_B0y[_B0hits] = hit_iter->second->get_y(0);
+	_B0z[_B0hits] = hit_iter->second->get_z(0);
 
+	_B0px[_B0hits] = hit_iter->second->get_px(0);
+        _B0py[_B0hits] = hit_iter->second->get_py(0);
+        _B0pz[_B0hits] = hit_iter->second->get_pz(0);
+ 	_B0id[_B0hits]  = hit_iter->second->get_hit_id();
+
+	_B0pid[_B0hits]=g4particle->get_pid();
+	
 	if(TMath::Abs(_B0z[_B0hits] - 592.0)<5) {layer = 1;}
-	if(TMath::Abs(_B0z[_B0hits] - 616.0)<5) {layer = 2;}
-	if(TMath::Abs(_B0z[_B0hits] - 640.0)<5) {layer = 3;}
-	if(TMath::Abs(_B0z[_B0hits] - 663.0)<5) {layer = 4;}
+        if(TMath::Abs(_B0z[_B0hits] - 616.0)<5) {layer = 2;}
+        if(TMath::Abs(_B0z[_B0hits] - 640.0)<5) {layer = 3;}
+        if(TMath::Abs(_B0z[_B0hits] - 663.0)<5) {layer = 4;}
 	
 	_B0ind[_B0hits] = layer;
+  	PHG4TruthInfoContainer::Range range = truthinfo->GetPrimaryParticleRange();  
 
-	for (PHG4TruthInfoContainer::ConstIterator iter = range.first;  iter != range.second; ++iter){
+        for (PHG4TruthInfoContainer::ConstIterator iter = range.first;  iter != range.second; ++iter){
+                const PHG4Particle *truth = iter->second;
+                if(truth->get_pid() == 2212){   
+                    _B0trPx[_B0hits] = truth->get_px();
+                    _B0trPy[_B0hits] = truth->get_py();
+                    _B0trPz[_B0hits] = truth->get_pz();
+                }               
+         } // end PHG4TruthInfoContainer iterator
 	
-	    	const PHG4Particle *truth = iter->second;
-	  	if(truth->get_pid() == 2212){	
-		    _B0trPx[_B0hits] = truth->get_px();
-		    _B0trPy[_B0hits] = truth->get_py();
-		    _B0trPz[_B0hits] = truth->get_pz();
-		} 		
-	 } // end PHG4TruthInfoContainer iterator
-	  _B0hits++;
-	}
-   }
+    } _B0hits++;
+	
+ }
   return Fun4AllReturnCodes::EVENT_OK;
 }
 

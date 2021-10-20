@@ -185,6 +185,8 @@ void jpsi(
     EvTree->Branch("yMC",&_yMC,"yMC/D");
     EvTree->Branch("xv",&_xv,"xv/D");
 	EvTree->Branch("xvMC",&_xvMC,"xvMC/D");
+	EvTree->Branch("Jpsi_M",&Jpsi_M,"Jpsi_M/D");
+
 
 
     EvTree->Branch("nTracks",&_nTracks,"nTracks/I");
@@ -479,7 +481,7 @@ void jpsi(
 		proton.SetPxPyPzE(_RPtrPx[0], _RPtrPy[0], _RPtrPz[0], energyproton);
 		//proton.SetPxPyPzE(_RPpx[0], _RPpy[0], _RPpz[0], energyproton);
 
-
+		Jpsi_M = JPsi.M();
 
 
 		if(HOFrame){
@@ -491,7 +493,7 @@ void jpsi(
 		}
 
 		
-		Jpsi_M = JPsi.M();
+		
 		ep_eta = hypep.Eta(); em_eta = em.Eta(); Jpsi_eta = JPsi.Eta(); e_eta = Electron.Eta();
 		ep_theta = hypep.Theta(); em_theta = em.Theta(); Jpsi_theta = JPsi.Theta(); e_theta = Electron.Theta();
 		ep_phi = hypep.Phi(); em_phi = em.Phi(); Jpsi_phi = JPsi.Phi(); e_phi = Electron.Phi();

@@ -7,7 +7,8 @@
 #include "clusterizer.cxx"
 
 void jpsi(
-	TString inFile            	= "../macros/18x272-IP6-Bill.root",
+	//TString inFile            	= "../macros/18x272-IP6-Bill.root",
+	TString inFile            	= "./../rootfiles/all.root",
 	TString inFileGeometry      = "./../rootfiles/geometry.root",
 	bool do_reclus              = true,
     unsigned short primaryTrackSource = 0,
@@ -68,6 +69,7 @@ void jpsi(
 	double _Q2,_xbj, _phiJpsi, _phiJpsiMC;
 	double _t, _Q2MC, _xbjMC, _tMC, _y, _yMC;
 	double _xv, _xvMC;
+	double _missmass, _missmassp;
 
 	int _BECAL_nclusters;
 
@@ -106,7 +108,7 @@ void jpsi(
 	int nHits; 
 	int hits_layerID[20];
 	int hits_trueID[20];
-/*
+
 	EvTree->Branch("Jpsi_track3_M1",&Jpsi_track3_M1,"Jpsi_track3_M1/D");
 	EvTree->Branch("Jpsi_track3_M2",&Jpsi_track3_M2,"Jpsi_track3_M2/D"); 	
 	
@@ -143,13 +145,13 @@ void jpsi(
 	
 
 	EvTree->Branch("RP1",&_RP1,"RP1/I");
-    	EvTree->Branch("RP2",&_RP2,"RP2/I");
-    	EvTree->Branch("RPhits",&_RPhits,"RPhits/I");
-    	EvTree->Branch("RPx",_RPx,"RPx[RPhits]/F");
-    	EvTree->Branch("RPy",_RPy,"RPy[RPhits]/F");
-    	EvTree->Branch("RPz",_RPz,"RPz[RPhits]/F");
+    EvTree->Branch("RP2",&_RP2,"RP2/I");
+    EvTree->Branch("RPhits",&_RPhits,"RPhits/I");
+    EvTree->Branch("RPx",_RPx,"RPx[RPhits]/F");
+    EvTree->Branch("RPy",_RPy,"RPy[RPhits]/F");
+    EvTree->Branch("RPz",_RPz,"RPz[RPhits]/F");
    	EvTree->Branch("RPind",_RPind,"RPind[RPhits]/I");
-    	EvTree->Branch("RPtrPx",_RPtrPx,"RPtrPx[RPhits]/F");
+    EvTree->Branch("RPtrPx",_RPtrPx,"RPtrPx[RPhits]/F");
    	EvTree->Branch("RPtrPy",_RPtrPy,"RPtrPy[RPhits]/F");
     EvTree->Branch("RPtrPz",_RPtrPz,"RPtrPz[RPhits]/F");
     EvTree->Branch("RPid",_RPid,"RPid[RPhits]/I");
@@ -215,7 +217,11 @@ void jpsi(
     EvTree->Branch("FEMC_z", _FEMC_z, "FEMC_z[FEMC_nclusters]/F");
     EvTree->Branch("FEMC_ID", _FEMC_ID, "FEMC_ID[FEMC_nclusters]/I");
     EvTree->Branch("FEMC_NtrueID", _FEMC_NtrueID, "FEMC_NtrueID[FEMC_nclusters]/I");
-*/
+    
+    EvTree->Branch("missmass", &_missmass, "missmass/D");
+    EvTree->Branch("missmassp", &_missmassp, "missmassp/D");
+
+
 	if(HepmcEnabled){
     		AddBranchesHepmc(EvTree);
 	}
@@ -323,7 +329,7 @@ void jpsi(
 		if(nep>1) continue;
 		if(noe!=2) continue;
 		
-		cout << noe << endl;			
+		
 		hypep.SetXYZM(_track_px[eptrack_N[0]],_track_py[eptrack_N[0]],_track_pz[eptrack_N[0]], me);
 		hyp1.SetXYZM(_track_px[othercharged[0]],_track_py[othercharged[0]],_track_pz[othercharged[0]], me);
 		hyp2.SetXYZM(_track_px[othercharged[1]],_track_py[othercharged[1]],_track_pz[othercharged[1]], me);
@@ -536,7 +542,15 @@ void jpsi(
 		//====== Rapidity 
 		_xv     = (_Q2MC + JPsi.M())/(2*ProtonBeam*(ElectronBeam - eeHepmc));
 		_xvMC   = (_Q2  + JpsiHepmc.M())/(2*ProtonBeam*(ElectronBeam - Electron));
+
+		_missmass  = (ElectronBeam +  ProtonBeam - JPsi - proton - Electron).M();
+
+	    _missmassp  = (ElectronBeam +  ProtonBeam - JPsi  - Electron).M();
 	}
+
+	 
+
+
 		track++;
 	
 

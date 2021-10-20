@@ -1,12 +1,13 @@
 
 
+
 #include "jpsi.h"
 #include "BranchesInfo.h"
-//#include "caloheader.h"
-//#include "clusterizer.cxx"
+#include "caloheader.h"
+#include "clusterizer.cxx"
 
 void jpsi(
-	TString inFile            	= "./../rootfiles/JPsi_all.root",
+	TString inFile            	= "./../rootfiles/all.root",
 	TString inFileGeometry      = "./../rootfiles/geometry.root",
 	bool do_reclus              = true,
     unsigned short primaryTrackSource = 0,
@@ -34,15 +35,15 @@ void jpsi(
     if(!tt_event){ std::cout << "tree not found... returning!"<< std::endl; return;}
 
      // // load geometry tree
-    /*tt_geometry =  (TTree *) (new TFile(inFileGeometry.Data(), "READ"))->Get("geometry_tree");
-    if(!tt_geometry){ cout << "geometry tree not found... returning!"<< endl; return;}*/
+    tt_geometry =  (TTree *) (new TFile(inFileGeometry.Data(), "READ"))->Get("geometry_tree");
+    if(!tt_geometry){ cout << "geometry tree not found... returning!"<< endl; return;}
 
     Long64_t nEntriesTree                 = tt_event->GetEntries();
     std::cout << "Number of events in tree: " << nEntriesTree << std::endl;
 
     SetBranchAddressesTree(tt_event);
-    //SetBranchAddressesGeometryTree(tt_geometry);
-    //SetGeometryIndices();
+    SetBranchAddressesGeometryTree(tt_geometry);
+    SetGeometryIndices();
 
     double elect_energy = 10;
     double proton_energy = 100;
@@ -63,7 +64,45 @@ void jpsi(
 	double ep_pT, em_pT, p_pT, Jpsi_pT, e_pT;
 	double ep_E, em_E, p_E, Jpsi_E, e_E, phiJpsidet;
 
-	double Q2, xbj, Q2MC, xbjMC, phiJpsi;
+	double p_eta_HO, p_theta_HO, p_p_HO; 
+	double p_pT_HO, p_E_HO, p_phi_HO; 
+
+	double _Q2,_xbj, _phiJpsi, _phiJpsiMC;
+	double _t, _Q2MC, _xbjMC, _tMC, _y, _yMC;
+	double _xv, _xvMC;
+
+	int _BECAL_nclusters;
+
+	float* _BECAL_E   = new float[_BECAL_nclusters];
+	float* _BECAL_Eta = new float[_BECAL_nclusters];
+	float* _BECAL_Phi = new float[_BECAL_nclusters];
+	float* _BECAL_x   = new float[_BECAL_nclusters];
+	float* _BECAL_y   = new float[_BECAL_nclusters];
+	float* _BECAL_z   = new float[_BECAL_nclusters];
+	int* _BECAL_ID  = new int[_BECAL_nclusters];
+	int* _BECAL_NtrueID =  new int[_BECAL_nclusters];
+
+	int _FEMC_nclusters;
+
+	float* _FEMC_E   = new float[_FEMC_nclusters];
+	float* _FEMC_Eta = new float[_FEMC_nclusters];
+	float* _FEMC_Phi = new float[_FEMC_nclusters];
+	float* _FEMC_x   = new float[_FEMC_nclusters];
+	float* _FEMC_y   = new float[_FEMC_nclusters];
+	float* _FEMC_z   = new float[_FEMC_nclusters];
+	int* _FEMC_ID  = new int[_FEMC_nclusters];
+	int* _FEMC_NtrueID =  new int[_FEMC_nclusters];
+
+	int _EEMC_nclusters;
+
+	float* _EEMC_E   = new float[_EEMC_nclusters];
+	float* _EEMC_Eta = new float[_EEMC_nclusters];
+	float* _EEMC_Phi = new float[_EEMC_nclusters];
+	float* _EEMC_x   = new float[_EEMC_nclusters];
+	float* _EEMC_y   = new float[_EEMC_nclusters];
+	float* _EEMC_z   = new float[_EEMC_nclusters];
+	int* _EEMC_ID  = new int[_EEMC_nclusters];
+	int* _EEMC_NtrueID =  new int[_EEMC_nclusters];
 
 
 	int nHits; 
@@ -72,8 +111,7 @@ void jpsi(
 
 	EvTree->Branch("Jpsi_track3_M1",&Jpsi_track3_M1,"Jpsi_track3_M1/D");
 	EvTree->Branch("Jpsi_track3_M2",&Jpsi_track3_M2,"Jpsi_track3_M2/D"); 	
-	EvTree->Branch("Jpsi_M",&Jpsi_M,"Jpsi_M/D");
-
+	
 	EvTree->Branch("ep_eta",&ep_eta,"ep_eta/D");
 	EvTree->Branch("ep_theta",&ep_theta,"ep_theta/D"); 	
 	EvTree->Branch("ep_phi",&ep_phi,"ep_phi/D");
@@ -105,12 +143,6 @@ void jpsi(
 	EvTree->Branch("e_pT",&e_pT,"e_pT/D");
 	EvTree->Branch("e_E",&e_E,"e_E/D");
 	
-	EvTree->Branch("Q2",&Q2,"Q2/D");
-	EvTree->Branch("xbj",&xbj,"xbj/D");
-	EvTree->Branch("Q2MC",&Q2MC,"Q2MC/D");
-	EvTree->Branch("xbjMC",&xbjMC,"xbjMC/D");
-	EvTree->Branch("phiJpsi",&phiJpsi,"phiJpsi/D");
-	EvTree->Branch("phiJpsidet",&phiJpsidet,"phiJpsidet/D");
 
 	EvTree->Branch("RP1",&_RP1,"RP1/I");
     EvTree->Branch("RP2",&_RP2,"RP2/I");
@@ -127,20 +159,75 @@ void jpsi(
     EvTree->Branch("RPpy",_RPpy,"RPpy[RPhits]/F");
     EvTree->Branch("RPpz",_RPpz,"RPpz[RPhits]/F");
     EvTree->Branch("RPpid",_RPpid,"RPpid[RPhits]/I");
-    EvTree->Branch("nTracks",&_nTracks,"nTracks/I");
 
+    EvTree->Branch("B0hits", &_B0hits, "B0hits/I");
+    EvTree->Branch("B0x", _B0x, "B0x[B0hits]/F");
+    EvTree->Branch("B0y", _B0y, "B0y[B0hits]/F");
+    EvTree->Branch("B0z", _B0z, "B0z[B0hits]/F");
+    EvTree->Branch("B0ind", _B0ind, "B0ind[B0hits]/I");
+    EvTree->Branch("B0px", _B0px, "B0px[B0hits]/F");
+    EvTree->Branch("B0py", _B0py, "B0py[B0hits]/F");
+    EvTree->Branch("B0pz", _B0pz, "B0pz[B0hits]/F");
+    EvTree->Branch("B0trPx", _B0trPx, "B0trPx[B0hits]/F");
+    EvTree->Branch("B0trPy", _B0trPy, "B0trPy[B0hits]/F");
+    EvTree->Branch("B0trPz", _B0trPz, "B0trPz[B0hits]/F");
+    EvTree->Branch("B0id", _B0id, "B0id[B0hits]/I");
+
+	EvTree->Branch("Q2",&_Q2,"Q2/D");
+	EvTree->Branch("Q2MC",&_Q2MC,"Q2MC/D");
+	EvTree->Branch("t",&_t,"t/D");
+	EvTree->Branch("tMC",&_tMC,"tMC/D");
+	EvTree->Branch("xbj",&_xbj,"xbj/D");
+	EvTree->Branch("xbjMC",&_xbjMC,"xbjMC/D");
+	EvTree->Branch("phiJpsi",&_phiJpsi,"phiJpsi/D");
+	EvTree->Branch("phiJpsiMC",&_phiJpsiMC,"phiJpsiMC/D"); 
+    EvTree->Branch("y",&_y,"y/D");
+    EvTree->Branch("yMC",&_yMC,"yMC/D");
+    EvTree->Branch("xv",&_xv,"xv/D");
+	EvTree->Branch("xvMC",&_xvMC,"xvMC/D");
+
+
+    EvTree->Branch("nTracks",&_nTracks,"nTracks/I");
+    EvTree->Branch("BECAL_nclusters", &_BECAL_nclusters, "BECAL_nclusters/I");
+    EvTree->Branch("BECAL_E ", _BECAL_E, "BECAL_E[BECAL_nclusters]/F");
+    EvTree->Branch("BECAL_Eta", _BECAL_Eta, "BECAL_Eta[BECAL_nclusters]/F");
+    EvTree->Branch("BECAL_Phi", _BECAL_Phi, "BECAL_Phi[BECAL_nclusters]/F");
+    EvTree->Branch("BECAL_x", _BECAL_x, "BECAL_x[BECAL_nclusters]/F");
+    EvTree->Branch("BECAL_y", _BECAL_y, "BECAL_y[BECAL_nclusters]/F");
+    EvTree->Branch("BECAL_z", _BECAL_z, "BECAL_z[BECAL_nclusters]/F");
+    EvTree->Branch("BECAL_ID", _BECAL_ID, "BECAL_ID[BECAL_nclusters]/I");
+    EvTree->Branch("BECAL_NtrueID", _BECAL_NtrueID, "BECAL_NtrueID[BECAL_nclusters]/I");
+
+	EvTree->Branch("EEMC_nclusters", &_EEMC_nclusters, "EEMC_nclusters/I");
+    EvTree->Branch("EEMC_E ", _EEMC_E, "EEMC_E[EEMC_nclusters]/F");
+    EvTree->Branch("EEMC_Eta", _EEMC_Eta, "EEMC_Eta[EEMC_nclusters]/F");
+    EvTree->Branch("EEMC_Phi", _EEMC_Phi, "EEMC_Phi[EEMC_nclusters]/F");
+    EvTree->Branch("EEMC_x", _EEMC_x, "EEMC_x[EEMC_nclusters]/F");
+    EvTree->Branch("EEMC_y", _EEMC_y, "EEMC_y[EEMC_nclusters]/F");
+    EvTree->Branch("EEMC_z", _EEMC_z, "EEMC_z[EEMC_nclusters]/F");
+    EvTree->Branch("EEMC_ID", _EEMC_ID, "EEMC_ID[EEMC_nclusters]/I");
+    EvTree->Branch("EEMC_NtrueID", _EEMC_NtrueID, "EEMC_NtrueID[EEMC_nclusters]/I");
+
+	EvTree->Branch("FEMC_nclusters", &_FEMC_nclusters, "FEMC_nclusters/I");
+    EvTree->Branch("FEMC_E ", _FEMC_E, "FEMC_E[FEMC_nclusters]/F");
+    EvTree->Branch("FEMC_Eta", _FEMC_Eta, "FEMC_Eta[FEMC_nclusters]/F");
+    EvTree->Branch("FEMC_Phi", _FEMC_Phi, "FEMC_Phi[FEMC_nclusters]/F");
+    EvTree->Branch("FEMC_x", _FEMC_x, "FEMC_x[FEMC_nclusters]/F");
+    EvTree->Branch("FEMC_y", _FEMC_y, "FEMC_y[FEMC_nclusters]/F");
+    EvTree->Branch("FEMC_z", _FEMC_z, "FEMC_z[FEMC_nclusters]/F");
+    EvTree->Branch("FEMC_ID", _FEMC_ID, "FEMC_ID[FEMC_nclusters]/I");
+    EvTree->Branch("FEMC_NtrueID", _FEMC_NtrueID, "FEMC_NtrueID[FEMC_nclusters]/I");
 
 	if(HepmcEnabled){
     		AddBranchesHepmc(EvTree);
-    		cout << "test" << endl;
 	}
 
-	AddBranchesMC(EvTree);
+
 
    	_nEventsTree=0;
 
     int track = 0;
-    int MC_aboveQ2 = 0;
+    //int MC_aboveQ2 = 0;
 
     TLorentzVector ProtonBeam(0,0,274.998,275);
     TLorentzVector ElectronBeam(0,0,-18,18);
@@ -195,107 +282,14 @@ void jpsi(
 	    		p_phi_Hepmc = pHepmc.Phi(); p_eta_Hepmc  = pHepmc.Eta(); 
 	    		p_p_Hepmc = pHepmc.Vect().Mag(); p_pT_Hepmc = pHepmc.Pt();
 	    		p_E_Hepmc = pHepmc.E();
-    		}else continue;
+    		}
+
+    		else continue;
 
 
     	}
-    	tHepmc = (pHepmc - ProtonBeam)*(pHepmc - ProtonBeam);
     	
-    	// load current event
-        TLorentzVector epMC_det;
-        TLorentzVector emMC_det;
-        TLorentzVector pMC_det;
-        TLorentzVector eMC_det;
-        if(_nMCPart!=4) continue;
-
-        for(int imc=0; imc<_nMCPart; imc++){
-        	 //===== J/Psi True
-        	 if(_mcpart_PDG[imc] == 11 && _mcpart_BCID[imc]==10009)  {
-        	 	epMC_det[0] = _mcpart_px[imc];
-        	 	epMC_det[1]	= _mcpart_py[imc];
-        	 	epMC_det[2]	= _mcpart_pz[imc];
-        	 	epMC_det[3]	= _mcpart_E[imc];
-        	 }
-        	 else if(_mcpart_PDG[imc] == -11 && _mcpart_BCID[imc]==10008)  {
-        	 	emMC_det[0] = _mcpart_px[imc];
-        	 	emMC_det[1]	= _mcpart_py[imc];
-        	 	emMC_det[2]	= _mcpart_pz[imc];
-        	 	emMC_det[3]	= _mcpart_E[imc];
-        	 }
-        	 else if(_mcpart_PDG[imc] == 2212 && _mcpart_BCID[imc]==10007)  {
-        	 	pMC_det[0] = _mcpart_px[imc];
-        	 	pMC_det[1]	= _mcpart_py[imc];
-        	 	pMC_det[2]	= _mcpart_pz[imc];
-        	 	pMC_det[3]	= _mcpart_E[imc];
-        	 }
-        	 else if(_mcpart_PDG[imc] == 11 && _mcpart_BCID[imc]==10002)  {
-        	 	eMC_det[0] = _mcpart_px[imc];
-        	 	eMC_det[1]	= _mcpart_py[imc];
-        	 	eMC_det[2]	= _mcpart_pz[imc];
-        	 	eMC_det[3]	= _mcpart_E[imc];
-        	 }
-        	 else
-        	 {
-
-        	 	continue;
-        	 }
-        }
-
-        TLorentzVector JpsiMC_det 	= 	epMC_det + emMC_det;
-
-
-
-        TLorentzVector pMC        	=  	rotlor*pMC_det;  	
-       	TLorentzVector JpsiMC 		= 	rotlor*JpsiMC_det;
-       	TLorentzVector eMC    		=	rotlor*eMC_det;
-       	TLorentzVector epMC    		=	rotlor*epMC_det;
-       	TLorentzVector emMC    		=	rotlor*emMC_det;
-/*
-        TLorentzVector pMC        	=  	pMC_det;  	
-       	TLorentzVector JpsiMC 		= 	JpsiMC_det;
-       	TLorentzVector eMC    		=	eMC_det;
-       	TLorentzVector epMC    		=	epMC_det;
-       	TLorentzVector emMC    		=	emMC_det;
-*/
-        Jpsi_mass_MC  = JpsiMC.M();
-      	Jpsi_theta_MC = JpsiMC.Theta()*180/TMath::Pi();
-      	Jpsi_phi_MC   = JpsiMC.Phi()*180/TMath::Pi();
-        Jpsi_eta_MC   = JpsiMC.Eta();
-        Jpsi_p_MC 	  = JpsiMC.Vect().Mag();
-        ep_pT_MC	  = JpsiMC.Perp();
-        Jpsi_E_MC     = JpsiMC.E();
-        //====== ep
-        ep_phi_MC     = epMC.Phi()*180/TMath::Pi();
-      	ep_theta_MC   = epMC.Theta()*180/TMath::Pi();
-        ep_eta_MC 	  = epMC_det.Eta();
-        ep_pT_MC	  = epMC.Perp();
-        ep_p_MC       = epMC.Vect().Mag();
-        ep_E_MC       = epMC.E();
-
-        //====== em
-       	em_phi_MC     = emMC.Phi()*180/TMath::Pi();
-      	em_theta_MC   = emMC.Theta()*180/TMath::Pi();
-      	em_eta_MC 	  = epMC_det.Eta();
-        em_pT_MC	  = emMC.Perp();
-        em_p_MC       = emMC.Vect().Mag();
-        em_E_MC       = emMC.E();
-
-        //====== p
-        p_phi_MC     =  pMC.Phi();
-        p_theta_MC   =  pMC.Theta()*180/TMath::Pi();
-        p_eta_MC 	 =  pMC.Eta();
-        p_pT_MC		 =  pMC.Perp();
-        p_p_MC       =  pMC.Vect().Mag();
-        p_E_MC       =  pMC.E();
-
-        //====== e
-      	e_phi_MC     =  eMC.Phi()*180/TMath::Pi();
-      	e_theta_MC   =  eMC.Theta()*180/TMath::Pi();
-      	e_eta_MC  	 =  eMC.Eta();
-      	e_pT_MC	  	 =  eMC.Perp();
-      	e_p_MC       =  eMC.Vect().Mag();
-        e_E_MC       =  eMC.E();
-
+    
 
 		TLorentzVector hypep;
 		TLorentzVector hyp1;
@@ -359,13 +353,132 @@ void jpsi(
 			continue;
 		}
 
-		if(HOFrame){
-			JPsi = rotlor*JPsi;
-			em   = rotlor*em;
-			ep   = rotlor*ep;
-			Electron = rotlor*Electron;
+
+
+		float seed_E = 0.5;
+        float aggregation_E = 0.1;
+
+        EEMC_cluster.clear();
+        FHCAL_cluster.clear();
+        BECAL_cluster.clear();
+        HCALIN_cluster.clear();
+        HCALOUT_cluster.clear();
+        FEMC_cluster.clear();
+        EHCAL_cluster.clear();
+
+
+        float seed_E_EEMC = 0.1;
+        float aggregation_E_EEMC = 0.05;
+		float seed_E_FHCAL = 0.5;
+        float aggregation_E_FHCAL = 0.1;
+        float seed_E_FEMC         = 0.1;
+        float aggregation_E_FEMC  = 0.005;
+        float seed_E_HCALIN = 0.2;
+        float aggregation_E_HCALIN = 0.05;
+        float seed_E_HCALOUT = 0.5;
+        float aggregation_E_HCALOUT = 0.1;
+        float seed_E_BECAL = 0.1;
+        float aggregation_E_BECAL = 0.01;
+        float seed_E_EHCAL = 0.01;
+        float aggregation_E_EHCAL = 0.005;
+
+		runclusterizer(kMA, kEEMC,    seed_E_EEMC, 	aggregation_E_EEMC, 0);
+		runclusterizer(kMA, kFEMC,    seed_E_FEMC, aggregation_E_FEMC, 0);
+		runclusterizer(kMA, kBECAL,   seed_E_BECAL, aggregation_E_BECAL, 0);
+		
+		/*
+		runclusterizer(kMA, kFHCAL,   seed_E_FHCAL, aggregation_E_FHCAL, 0);
+		runclusterizer(kMA, kHCALIN,  seed_E_HCALIN, aggregation_E_HCALIN, 0);
+		runclusterizer(kMA, kHCALOUT, seed_E_HCALOUT, aggregation_E_HCALOUT, 0);
+		runclusterizer(kMA, kEHCAL,   seed_E_EHCAL, aggregation_E_EHCAL, 0);*/
+
+		_BECAL_nclusters = 0;
+		map<int, clustersStrct>::iterator itr;
+		for (itr = BECAL_cluster.begin(); itr != BECAL_cluster.end(); ++itr) {
+			if(itr->second.cluster_E > emin){
+			_BECAL_E[_BECAL_nclusters] =  itr->second.cluster_E;
+			_BECAL_Eta[_BECAL_nclusters] = itr->second.cluster_Eta;
+			_BECAL_Phi[_BECAL_nclusters] = itr->second.cluster_Phi;
+			_BECAL_x[_BECAL_nclusters] = itr->second.cluster_X;
+			_BECAL_y[_BECAL_nclusters] = itr->second.cluster_Y;
+			_BECAL_z[_BECAL_nclusters] = itr->second.cluster_Z;
+			_BECAL_ID[_BECAL_nclusters] = itr->second.cluster_trueID;
+			_BECAL_NtrueID[_BECAL_nclusters] = itr->second.cluster_NtrueID;
+			_BECAL_nclusters++;
+			}		
 		}
 
+		_EEMC_nclusters = 0;
+		map<int, clustersStrct>::iterator itr2;
+		for (itr2 = EEMC_cluster.begin(); itr2 != EEMC_cluster.end(); ++itr2) {
+			if(itr2->second.cluster_E > emin){
+			_EEMC_E[_EEMC_nclusters] =  itr2->second.cluster_E;
+			_EEMC_Eta[_EEMC_nclusters] = itr2->second.cluster_Eta;
+			_EEMC_Phi[_EEMC_nclusters] = itr2->second.cluster_Phi;
+			_EEMC_x[_EEMC_nclusters] = itr2->second.cluster_X;
+			_EEMC_y[_EEMC_nclusters] = itr2->second.cluster_Y;
+			_EEMC_z[_EEMC_nclusters] = itr2->second.cluster_Z;
+			_EEMC_ID[_EEMC_nclusters] = itr2->second.cluster_trueID;
+			_EEMC_NtrueID[_EEMC_nclusters] = itr2->second.cluster_NtrueID;
+			_EEMC_nclusters++;	
+			}	
+		}
+
+		_FEMC_nclusters = 0;
+		map<int, clustersStrct>::iterator itr3;
+		for (itr3 = FEMC_cluster.begin(); itr3 != FEMC_cluster.end(); ++itr3) {
+			if(itr3->second.cluster_E > emin){
+			_FEMC_E[_FEMC_nclusters] =  itr3->second.cluster_E;
+			_FEMC_Eta[_FEMC_nclusters] = itr3->second.cluster_Eta;
+			_FEMC_Phi[_FEMC_nclusters] = itr3->second.cluster_Phi;
+			_FEMC_x[_FEMC_nclusters] = itr3->second.cluster_X;
+			_FEMC_y[_FEMC_nclusters] = itr3->second.cluster_Y;
+			_FEMC_z[_FEMC_nclusters] = itr3->second.cluster_Z;
+			_FEMC_ID[_FEMC_nclusters] = itr3->second.cluster_trueID;
+			_FEMC_NtrueID[_FEMC_nclusters] = itr3->second.cluster_NtrueID;
+			_FEMC_nclusters++;		
+		}
+		}
+
+		double res_track = 0.02;
+
+		if(_EEMC_nclusters>1){
+
+			for(int n=0; n<_EEMC_nclusters; n++)
+
+				if( fabs( (_EEMC_Eta[n] - Electron.Eta() )/Electron.Eta()) < res_track &&  fabs((_EEMC_Phi[n] - Electron.Phi())/Electron.Phi() )  < res_track && _EEMC_Eta[n] < -2.  && _EEMC_Eta[n] > -3.5 ){
+				
+					/*double pt = _EEMC_E[n]/cosh(_EEMC_Eta[n] );
+          			double px = pt * cos(_EEMC_Phi[n]);
+          			double py = pt * sin(_EEMC_Phi[n]);
+         			double pz = pt * sinh(_EEMC_Eta[n]);*/
+         	      	double pp 	 = sqrt(_EEMC_E[n]*_EEMC_E[n] - me*me);
+					double theta = 2*atan(exp(-_EEMC_Eta[n]));
+
+					double px = pp*sin(theta)*cos(_EEMC_Phi[n]);
+					double py = pp*sin(theta)*sin(_EEMC_Phi[n]);
+					double pz = pp*cos(theta);					
+
+         			Electron.SetPxPyPzE(px, py, pz, _EEMC_E[n]);
+
+         			//cout << Electron.M() << endl;
+         			break;
+
+				}
+		}
+
+
+
+
+		//======================= Proton reconstructed ===============
+
+
+		TLorentzVector proton;
+		TVector3 prot3D(_RPtrPx[0],_RPtrPy[0],_RPtrPz[0]);
+		//TVector3 prot3D(_RPpx[0],_RPpy[0],_RPpz[0]);
+		double  energyproton = sqrt(prot3D.Mag2() + protonmass*protonmass );
+		proton.SetPxPyPzE(_RPtrPx[0], _RPtrPy[0], _RPtrPz[0], energyproton);
+		//proton.SetPxPyPzE(_RPpx[0], _RPpy[0], _RPpz[0], energyproton);
 
 		Jpsi_M = JPsi.M();
 		ep_eta = hypep.Eta(); em_eta = em.Eta(); Jpsi_eta = JPsi.Eta(); e_eta = Electron.Eta();
@@ -374,41 +487,62 @@ void jpsi(
 		ep_p = hypep.Vect().Mag(); em_p = em.Vect().Mag(); Jpsi_p = JPsi.Vect().Mag(); e_p = Electron.Vect().Mag();
 		ep_pT = hypep.Perp(); em_pT = em.Perp(); Jpsi_pT = JPsi.Perp(); e_pT = Electron.Perp();
 		ep_E = hypep.E(); em_E = em.E(); Jpsi_E = JPsi.E(); e_E = Electron.E();
+		p_eta = proton.Eta(); p_theta = proton.Theta(); p_phi = proton.Phi(); p_p = proton.Vect().Mag();
+		p_pT = proton.Perp(); p_E = proton.E(); 
+
+
+
+		if(HOFrame){
+			JPsi = rotlor*JPsi;
+			em   = rotlor*em;
+			ep   = rotlor*ep;
+			Electron = rotlor*Electron;
+			proton = rotlor*proton;
+		}
+
+
+
 
 		//==== Kinematics from tracking ==========
 
 	   	
-    	TLorentzVector eMC_HO = rotate_reco(eMC,25.e-3);
-    	TLorentzVector Electron_HO = rotate_reco(Electron,25.e-3);
-
-		Q2MC = -(ElectronBeam - eMC_HO)*(ElectronBeam - eMC_HO);
-		Q2   = -(ElectronBeam - Electron_HO)*(ElectronBeam - Electron_HO);
 
 
-		xbjMC = Q2MC/(2*ProtonBeam*(ElectronBeam - eMC_HO));
-		xbj   = Q2/(2*ProtonBeam*(ElectronBeam - Electron_HO));
-
-		TLorentzVector JPsi_HO = rotate_reco(JPsi,25.e-3);
-
-		phiJpsi = JPsi_HO.Vect().Angle(ProtonBeam.Vect());
+		_Q2MC = -(ElectronBeam - eeHepmc)*(ElectronBeam - eeHepmc);
+		_Q2   = -(ElectronBeam - Electron)*(ElectronBeam - Electron);
 
 
-		TLorentzVector q = (ElectronBeam - Electron_HO);
-		q.Boost( -ProtonBeam.BoostVector() );
-		Electron_HO.Boost( -ProtonBeam.BoostVector() );
-		JPsi_HO.Boost( -ProtonBeam.BoostVector() );
+		_xbjMC = _Q2MC/(2*ProtonBeam*(ElectronBeam - eeHepmc));
+		_xbj   = _Q2/(2*ProtonBeam*(ElectronBeam - Electron));
 
-		TVector3 v1      =  q.Vect().Cross(Electron_HO.Vect());
-		TVector3 v2      =  q.Vect().Cross(JPsi_HO.Vect());
+		_tMC = (pHepmc - ProtonBeam)*(pHepmc - ProtonBeam);
+		_t = (proton - ProtonBeam)*(proton - ProtonBeam);
 
-		phiJpsi          =  v1.Angle(v2);
+		//======phi 
+		TVector3 q 		  = (ElectronBeam - Electron).Vect();
+		TVector3 v1      =  q.Cross(Electron.Vect());
+		TVector3 v2      =  q.Cross(JPsi.Vect());
+		_phiJpsi          =  v1.Angle(v2);
 
-		if(q.Vect().Dot(v1.Cross(v2))<0) phiJpsi=2.*TMath::Pi()-phiJpsi;
-		
-		TLorentzVector test = rotate_reco(ProtonBeam,25.e-3);
+		if(q.Dot(v1.Cross(v2))<0) _phiJpsi=2.*TMath::Pi()-_phiJpsi;
+
+		TVector3 qHepmc		  = (ElectronBeam - eeHepmc).Vect();
+		TVector3 v1Hepmc      =  q.Cross(eeHepmc.Vect());
+		TVector3 v2Hepmc      =  q.Cross(JpsiHepmc.Vect());
+		_phiJpsiMC          =  v1.Angle(v2);
+
+		if(q.Dot(v1.Cross(v2))<0) _phiJpsiMC=2.*TMath::Pi()-_phiJpsiMC;
 
 
-		phiJpsidet = JPsi.Vect().Angle(ProtonBeam.Vect());
+		//====== Rapidity 
+
+		_y    = log((proton.E() + proton.Pz())/(proton.E() - proton.Pz()))/2;
+		_yMC  = log((pHepmc.E() + pHepmc.Pz())/(pHepmc.E() - pHepmc.Pz()))/2;
+
+
+		//====== Rapidity 
+		_xv     = (_Q2MC + JPsi.M())/(2*ProtonBeam*(ElectronBeam - eeHepmc));
+		_xvMC   = (_Q2  + JpsiHepmc.M())/(2*ProtonBeam*(ElectronBeam - Electron));
 
 		track++;
 	
@@ -423,7 +557,7 @@ void jpsi(
 
     EvTree->Write();
  	MyFile->Close();
- 	cout << "number MC " << MC_aboveQ2 << endl;
+ 	//cout << "number MC " << MC_aboveQ2 << endl;
  	cout << "number analyzed " << track << endl;
  	cout << "Track 3 events: " << alltrack3 << endl;
  	cout << "Mass cut NOT accepted: " << notaccepted << endl;

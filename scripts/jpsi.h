@@ -12,6 +12,8 @@ const double me =  0.000511;
 const double low_limjpsiM = 2.;
 const double high_limjpsiM = 5.;
 
+double emin = 0.5;
+
 
 const int _maxNTowers = 50 * 50;
 const int _maxNTowersCentral = 2000;
@@ -41,6 +43,7 @@ enum calotype {
   kEEMCG          = 9,
   kBECAL          = 10
 };
+
 
 bool caloEnabled[20]      = {0};
 bool tracksEnabled        = 0;
@@ -239,6 +242,21 @@ float* _RPtrPz = new float[_maxRPhits];
 int*   _RPid = new int[_maxRPhits];
 int*  _RPpid = new int[_maxRPhits];
 
+ int _B0hits = 100;
+
+float* _B0x =  new float[_B0hits];
+float* _B0y =  new float[_B0hits];
+float* _B0z =  new float[_B0hits];
+float* _B0px =  new float[_B0hits];
+float* _B0py =  new float[_B0hits];
+float* _B0pz =   new float[_B0hits];
+float* _B0trPx =  new float[_B0hits];
+float* _B0trPy =  new float[_B0hits];
+float* _B0trPz =  new float[_B0hits];
+int*  _B0pid =  new int[_B0hits];
+int*  _B0id =  new int[_B0hits];
+int*  _B0ind  =  new int[_B0hits];
+
 float _EMJpsi_px, _EMJpsi_py, _EMJpsi_pz, _EMJpsi_e;
 float _EPJpsi_px, _EPJpsi_py, _EPJpsi_pz, _EPJpsi_e;
 float _E_px, _E_py, _E_pz, _E_e;
@@ -394,24 +412,6 @@ void SetBranchAddressesTree(TTree* inputTree){
       inputTree->SetBranchAddress("tower_FEMC_trueID",            _tower_FEMC_trueID);
     }
 
-    // clusters HCAL
-    if (caloEnabled[kFHCAL]){
-      inputTree->SetBranchAddress("cluster_FHCAL_N",                &_nclusters_FHCAL);
-      inputTree->SetBranchAddress("cluster_FHCAL_E",                _clusters_FHCAL_E);
-      inputTree->SetBranchAddress("cluster_FHCAL_Eta",             _clusters_FHCAL_Eta);
-      inputTree->SetBranchAddress("cluster_FHCAL_Phi",             _clusters_FHCAL_Phi);
-      inputTree->SetBranchAddress("cluster_FHCAL_NTower",             _clusters_FHCAL_NTower);
-      inputTree->SetBranchAddress("cluster_FHCAL_trueID",           _clusters_FHCAL_trueID);
-    }
-    // clusters EMC
-    if (caloEnabled[kFEMC]){
-      inputTree->SetBranchAddress("cluster_FEMC_N",                 &_nclusters_FEMC);
-      inputTree->SetBranchAddress("cluster_FEMC_E",                 _clusters_FEMC_E);
-      inputTree->SetBranchAddress("cluster_FEMC_Eta",              _clusters_FEMC_Eta);
-      inputTree->SetBranchAddress("cluster_FEMC_Phi",              _clusters_FEMC_Phi);
-      inputTree->SetBranchAddress("cluster_FEMC_NTower",              _clusters_FEMC_NTower);
-      inputTree->SetBranchAddress("cluster_FEMC_trueID",            _clusters_FEMC_trueID);
-    }
     // vertex
 
     if (inputTree->GetBranchStatus("vertex_x") ){
@@ -420,20 +420,10 @@ void SetBranchAddressesTree(TTree* inputTree){
       inputTree->SetBranchAddress("vertex_y",                     &_vertex_y);
       inputTree->SetBranchAddress("vertex_z",                     &_vertex_z);
     }
-    // MC particles
-    inputTree->SetBranchAddress("nMCPart",       &_nMCPart);
-    inputTree->SetBranchAddress("mcpart_ID",     _mcpart_ID);
-    inputTree->SetBranchAddress("mcpart_ID_parent",     _mcpart_ID_parent);
-    inputTree->SetBranchAddress("mcpart_PDG",    _mcpart_PDG);
-    inputTree->SetBranchAddress("mcpart_E",      _mcpart_E);
-    inputTree->SetBranchAddress("mcpart_px",     _mcpart_px);
-    inputTree->SetBranchAddress("mcpart_py",     _mcpart_py);
-    inputTree->SetBranchAddress("mcpart_pz",     _mcpart_pz);
-    inputTree->SetBranchAddress("mcpart_BCID",     _mcpart_BCID);
-
-    if (inputTree->GetBranchStatus("maxNHepmcp") ){
+ 
+    if (inputTree->GetBranchStatus("nHepmcp") ){
       HepmcEnabled = 1;
-      inputTree->SetBranchAddress("maxNHepmcp",      &_nHepmcp);
+      inputTree->SetBranchAddress("nHepmcp",      &_nHepmcp);
       //inputTree->SetBranchAddress("hepmcp_procid",      &_hepmcp_procid);
       inputTree->SetBranchAddress("hepmcp_x1",          &_hepmcp_x1);
       inputTree->SetBranchAddress("hepmcp_x2",          &_hepmcp_x2);
@@ -466,6 +456,20 @@ void SetBranchAddressesTree(TTree* inputTree){
     inputTree->SetBranchAddress("RPpy",_RPpy);
     inputTree->SetBranchAddress("RPpz",_RPpz);
     inputTree->SetBranchAddress("RPpid",_RPpid);
+
+    inputTree->Branch("B0hits", &_B0hits);
+    inputTree->Branch("B0x", _B0x);
+    inputTree->Branch("B0y", _B0y);
+    inputTree->Branch("B0z", _B0z);
+    inputTree->Branch("B0ind", _B0ind);
+    inputTree->Branch("B0px", _B0px);
+    inputTree->Branch("B0py", _B0py);
+    inputTree->Branch("B0pz", _B0pz);
+    inputTree->Branch("B0trPx", _B0trPx);
+    inputTree->Branch("B0trPy", _B0trPy);
+    inputTree->Branch("B0trPz", _B0trPz);
+    inputTree->Branch("B0id", _B0id);
+
    
     inputTree->Branch("EMJpsi_px", &_EMJpsi_px);
     inputTree->Branch("EMJpsi_py", &_EMJpsi_py);
@@ -533,5 +537,32 @@ TLorentzVector rotate_reco(TLorentzVector init, double angle ){
   rotat = l*init;
   return rotat;
 }
+
+typedef struct {
+  float cluster_E;
+  float cluster_seed;
+  float cluster_Eta;
+  float cluster_Phi;
+  float cluster_Z;
+  float cluster_X;
+  float cluster_Y;
+  float cluster_M02;
+  float cluster_M20;
+  bool cluster_isMatched;
+  int cluster_NTowers;
+  int cluster_trueID;
+  int cluster_NtrueID;
+} clustersStrct;
+
+
+map <int, clustersStrct> EEMC_cluster; 
+map <int, clustersStrct> FHCAL_cluster;
+map <int, clustersStrct> BECAL_cluster;
+map <int, clustersStrct> HCALIN_cluster;
+map <int, clustersStrct> HCALOUT_cluster;
+map <int, clustersStrct> FEMC_cluster;
+map <int, clustersStrct> EHCAL_cluster;
+
+
 
 

@@ -86,16 +86,26 @@ l4->Draw("same");
 c1->SaveAs(Form("%s/RP_nocuts.pdf",outdir.Data()));
 
 TCanvas *c2 = new TCanvas("c2","",0,0,800,800);
-TH1F* etaproton = new TH1F("etaproton","",bins,4,5);
-TH1F* etaprotoncut = new TH1F("etaprotoncut","",bins,4,5);
-tt_event->Draw("p_eta_MC>>etaproton", RPpid + RPhits,"goff");
-tt_event->Draw("p_eta_MC>>etaprotoncut",allcuts,"goff");
+TH1F* etaproton = new TH1F("etaproton","",bins,4,10);
+TH1F* etaprotoncut = new TH1F("etaprotoncut","",bins,4,10);
+tt_event->Draw("p_eta_Hepmc>>etaproton", RPpid + RPhits,"goff");
+tt_event->Draw("p_eta>>etaprotoncut",allcuts,"goff");
 etaproton->SetLineColor(kBlack);
+etaprotoncut->SetLineColor(kRed);
 etaproton->Draw();
 etaprotoncut->Draw("same");
 
-TCanvas *c23= new TCanvas("c3","",0,0,800,800);
+TCanvas *c3 = new TCanvas("c3","",0,0,800,800);
+TH2F* RP1hist = new TH2F("RP1hist","", bins, -110, -60, bins, -5, 5);
+SetStyleHistoTH2ForGraphs(RP1hist, "x [cm]", "y [cm]", 0.04, 0.05, 0.04, 0.05, 0.9, 0.9);
+tt_event->Draw("RPy:RPx>>RP1hist", allcuts + Rp1cut, "goff");
+RP1hist->Draw("colz");
+c3->SaveAs(Form("%s/RP1hist.pdf",outdir.Data()));
 
-
-
+TCanvas *c4 = new TCanvas("c4","",0,0,800,800);
+TH2F* RP2hist = new TH2F("RP2hist","", bins, -110, -60, bins, -5, 5);
+SetStyleHistoTH2ForGraphs(RP2hist, "x [cm]", "y [cm]", 0.04, 0.05, 0.04, 0.05, 0.9, 0.9);
+tt_event->Draw("RPy:RPx>>RP2hist", allcuts + Rp2cut, "goff");
+RP2hist->Draw("colz");
+c4->SaveAs(Form("%s/RP2hist.pdf",outdir.Data()));
 }

@@ -1,4 +1,6 @@
 
+double protonmass = 0.9382720;
+
 double Jpsi_mass_Hepmc, Jpsi_theta_Hepmc, Jpsi_phi_Hepmc, Jpsi_eta_Hepmc, Jpsi_p_Hepmc, Jpsi_pT_Hepmc,Jpsi_E_Hepmc;
 double ep_theta_Hepmc,  ep_phi_Hepmc,     ep_eta_Hepmc,   ep_p_Hepmc,     ep_pT_Hepmc,  ep_E_Hepmc;
 double em_theta_Hepmc,  em_phi_Hepmc,     em_eta_Hepmc,   em_p_Hepmc,     em_pT_Hepmc,  em_E_Hepmc;

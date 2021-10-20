@@ -110,7 +110,7 @@ tt_event->Draw("ep_eta:ep_p>>kinep",cut,"goff");
 tt_event->Draw("em_eta:em_p>>kinem",cut,"goff");
 tt_event->Draw("Jpsi_eta:Jpsi_p>>kinjpsi",cut,"goff");
 tt_event->Draw("e_eta:e_p>>kinel",cut,"goff");
-tt_event->Draw("p_eta:p_p>>kinp",cut,"goff");
+tt_event->Draw("p_eta_HO:p_p_HO>>kinp",cut,"goff");
 
 //========================================================================//
 TCanvas *c3 = new TCanvas("c3","",0,0,1100,1000);

@@ -11,9 +11,10 @@ double beamenergy = 275;
 const int bins = 100;
 const double lumi = 10.; //fb-1
 const int bins80 = 80;
-double emin =1 ;
 
-TCut RPindex = "RPind == 1";
+
+TCut RPindex = "RPind[0] == 1 && RPind[1] == 2";
+
 TCut RPpid = "RPpid == 2212";
 TCut RPhits = "RPhits < 3";
 TCut nTrackcut = "nTracks == 3"; 
@@ -24,6 +25,7 @@ TCut RPcut2    =  Form("((RPx[0] > %f && RPx[0] < %f) && (RPy[0] > %f  && RPy[0]
 
 
 TCut allcuts = RPpid + RPhits + !RPcut1 + RPcut2;
+
 TString outdir = "../plots/";
 
 TCut elec_eta_ccut = "e_eta_Hepmc < 0";
@@ -42,4 +44,4 @@ TCut Rp2cut = "RPz>2700 && RPz<2900";
 TCut xbjcut = "xbjMC<0.1";
 
 
-TCut totalcuts = allcuts  + elec_eta_ccut  +  elec_etarecp_ccut + posi_jpsi_etareco_ccut + elec_jpsi_etareco_ccut + Q2cut + xlcut + xbjcut;
+TCut totalcuts = allcuts  + elec_eta_ccut  +  elec_etarecp_ccut + posi_jpsi_etareco_ccut + elec_jpsi_etareco_ccut + Q2cut + xlcut + xbjcut + RPindex;

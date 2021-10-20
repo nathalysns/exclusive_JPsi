@@ -54,17 +54,17 @@ TH1F* etaprotoncut = new TH1F("etaprotoncut","",bins,protetamin,protetamax);
 SetStyleHistoTH1ForGraphs(etaproton,"", "#eta ", "counts/fb^{-1}", 0.7*textSizeSinglePad,textSizeSinglePad,0.7*textSizeSinglePad,textSizeSinglePad,1.1,1.4);
 SetStyleHistoTH1ForGraphs(etaprotoncut,"", "#eta ", "counts/fb^{-1}", 0.7*textSizeSinglePad,0.7*textSizeSinglePad, 0.7*textSizeSinglePad,0.7*textSizeSinglePad,1.1,1.1);
 
-TCut cut1 =   Form("%f",1/lumi) * (RPpid + RPhits);
-TCut cutall = Form("%f",1/lumi) * (allcuts);
+TCut cut1 =   Form("%f",1/lumi);
+TCut cutall = Form("%f",1/lumi)*(allcuts);
 
-tt_event->Draw("p_eta>>etaproton", cut1, "goff");
-tt_event->Draw("p_eta_Hepmc>>etaprotoncut",cutall,"goff");
+tt_event->Draw("p_eta_Hepmc>>etaproton", cut1, "goff");
+tt_event->Draw("p_eta>>etaprotoncut",cutall,"goff");
 
 auto legend = new TLegend(0.5,0.6,0.9,0.9);
 legend->SetHeader("ECCE","C");
-legend->AddEntry((TObject*)0, "e+P 18x275", "");
+legend->AddEntry((TObject*)0, Form("e+P %s",config.Data()), "");
 legend->AddEntry((TObject*)0, "J/#Psi #rightarrow ee", "");
-legend->AddEntry((TObject*)0, "Q^{2} > 1 GeV^{2} ");
+legend->AddEntry((TObject*)0, "Q^{2} > 1 GeV^{2} ","");
 legend->AddEntry(etaproton, "Generated", "f");
 legend->AddEntry(etaprotoncut, "Reconstructed", "ep");
 TH1F* etaprotonoriginal = (TH1F*) etaprotoncut->Clone();
@@ -92,8 +92,10 @@ auto *p4 = new TPad("p4","",0.,0.35,1.,1.);  p4->Draw();
 p4->SetBottomMargin(0.001);
 p4->cd();
 p4->SetGrid();
-tt_event->Draw("e_eta_Hepmc>>etaelectron",  Form("%f",1/lumi) * (elec_eta_ccut) ,"goff");
+
+tt_event->Draw("e_eta_Hepmc>>etaelectron",  Form("%f",1/lumi)*(elec_eta_ccut) ,"goff");
 tt_event->Draw("e_eta>>etaelectroncut",  Form("%f",1/lumi)*(nTrackcut + elec_eta_ccut + elec_etarecp_ccut),"goff");
+
 SetStyleHistoTH1ForGraphs(etaelectron,"", "#eta ", "counts/fb^{-1}", 0.7*textSizeSinglePad,textSizeSinglePad,0.7*textSizeSinglePad,textSizeSinglePad,1.1,1.4);
 SetStyleHistoTH1ForGraphs(etaelectroncut,"", "#eta ", "counts/fb^{-1}", 0.7*textSizeSinglePad,textSizeSinglePad,0.7*textSizeSinglePad,textSizeSinglePad,1.1,1.4);
 etaelectron->SetFillColor(kCyan+2);
@@ -122,8 +124,10 @@ p6->cd();
 p6->SetGrid();
 TH1F* etaelectropn = new TH1F("etaelectropn","",bins,electronmin,electronmax+3);
 TH1F* etaelectronpncut = new TH1F("etaelectronpncut","",bins,electronmin,electronmax+3);
+
 tt_event->Draw("ep_eta_Hepmc>>etaelectropn", Form("%f",1/lumi) ,"goff");
 tt_event->Draw("ep_eta>>etaelectronpncut", Form("%f",1/lumi)*(nTrackcut + posi_jpsi_etareco_ccut),"goff");
+
 SetStyleHistoTH1ForGraphs(etaelectropn,"", "#eta ", "counts/fb^{-1}", 0.7*textSizeSinglePad,textSizeSinglePad,0.7*textSizeSinglePad,textSizeSinglePad,1.1,1.4);
 SetStyleHistoTH1ForGraphs(etaelectronpncut,"", "#eta ", "counts/fb^{-1}", 0.7*textSizeSinglePad,textSizeSinglePad,0.7*textSizeSinglePad,textSizeSinglePad,1.1,1.4);
 etaelectropn->SetFillColor(kCyan+2);
@@ -151,6 +155,7 @@ p8->cd();
 p8->SetGrid();
 TH1F* etaelectromn = new TH1F("etaelectromn","",bins,electronmin,electronmax+4);
 TH1F* etaelectromncut = new TH1F("etaelectromncut","",bins,electronmin,electronmax+4);
+
 tt_event->Draw("em_eta_Hepmc>>etaelectromn",Form("%f",1/lumi) ,"goff");
 tt_event->Draw("em_eta>>etaelectromncut", Form("%f",1/lumi)*(nTrackcut + elec_jpsi_etareco_ccut), "goff");
 
@@ -184,6 +189,7 @@ p10->cd();
 p10->SetGrid();
 TH1F* ptproton = new TH1F("ptproton","",bins,0,2);
 TH1F* ptprotoncutt = new TH1F("ptprotoncutt","",bins,0,2);
+
 tt_event->Draw("p_pT>>ptproton", Form("%f",1/lumi)*(RPpid + RPhits),"goff");
 tt_event->Draw("p_pT_Hepmc>>ptprotoncutt",  Form("%f",1/lumi)*(allcuts), "goff");
 
@@ -269,5 +275,38 @@ toriginal->GetYaxis()->SetNdivisions(506, 4, 0, kTRUE);
 toriginal->GetYaxis()->SetRangeUser(0,1.2);
 toriginal->Draw("p");
 c8->SaveAs(Form("%st.pdf",outdir.Data()));
+
+//===============================================================================
+TCanvas *c9 = new TCanvas("c9","",0,0,500,700);
+auto *p15 = new TPad("p15","",0.,0.,1.,0.3); p15->Draw();
+p15->SetTopMargin(0.001);
+p15->SetBottomMargin(0.3);
+p15->SetGrid();
+
+auto *p16 = new TPad("p16","",0.,0.35,1.,1.);  p16->Draw();
+p16->SetBottomMargin(0.001);
+p16->cd();
+p16->SetGrid();
+TH1F* xvhist    = new TH1F("xvhist","",bins,0.,2);
+TH1F* xvhistcut = new TH1F("xvhistcut","",bins,0.,2);
+tt_event->Draw("xv>>xvhist", Form("%f",1/lumi)*(RPpid + RPhits),"goff");
+tt_event->Draw("xvMC>>xvhistcut",  Form("%f",1/lumi)*allcuts, "goff");
+
+SetStyleHistoTH1ForGraphs(thist,"", "-t [GeV^{2}]", "counts/fb^{-1}", 0.7*textSizeSinglePad,textSizeSinglePad,0.7*textSizeSinglePad,textSizeSinglePad,1.1,1.4);
+SetStyleHistoTH1ForGraphs(thistcut,"", "-t [GeV^{2}]", "counts/fb^{-1}", 0.7*textSizeSinglePad,textSizeSinglePad,0.7*textSizeSinglePad,textSizeSinglePad,1.1,1.4);
+thist->SetFillColor(kCyan+2);
+thist->Draw("hist");
+thistcut->Draw("ep same");
+legend->Draw();
+TH1F* toriginal = (TH1F*) thistcut->Clone();
+
+p13->cd();
+toriginal->Divide(thist);
+SetStyleHistoTH1ForGraphs(toriginal,"", "-t [GeV^{2}]", "ratio", 2*textSizeSinglePad,2*textSizeSinglePad, 1.7*textSizeSinglePad,2*textSizeSinglePad,1.1,0.5);
+toriginal->GetYaxis()->SetNdivisions(506, 4, 0, kTRUE);
+toriginal->GetYaxis()->SetRangeUser(0,1.2);
+toriginal->Draw("p");
+c8->SaveAs(Form("%st.pdf",outdir.Data()));
+
 
 }

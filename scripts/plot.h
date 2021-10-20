@@ -27,6 +27,9 @@
 
 const Double_t textSizeSinglePad        = 0.05;
 
+TString config = "18x275 GeV";
+double energyT = 275;
+
 void DrawGammaCanvasSettings( TCanvas* c1,
                             Double_t leftMargin,
                             Double_t rightMargin,

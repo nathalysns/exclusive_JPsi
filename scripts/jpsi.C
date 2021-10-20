@@ -480,15 +480,6 @@ void jpsi(
 		proton.SetPxPyPzE(_RPtrPx[0], _RPtrPy[0], _RPtrPz[0], energyproton);
 		//proton.SetPxPyPzE(_RPpx[0], _RPpy[0], _RPpz[0], energyproton);
 
-		Jpsi_M = JPsi.M();
-		ep_eta = hypep.Eta(); em_eta = em.Eta(); Jpsi_eta = JPsi.Eta(); e_eta = Electron.Eta();
-		ep_theta = hypep.Theta(); em_theta = em.Theta(); Jpsi_theta = JPsi.Theta(); e_theta = Electron.Theta();
-		ep_phi = hypep.Phi(); em_phi = em.Phi(); Jpsi_phi = JPsi.Phi(); e_phi = Electron.Phi();
-		ep_p = hypep.Vect().Mag(); em_p = em.Vect().Mag(); Jpsi_p = JPsi.Vect().Mag(); e_p = Electron.Vect().Mag();
-		ep_pT = hypep.Perp(); em_pT = em.Perp(); Jpsi_pT = JPsi.Perp(); e_pT = Electron.Perp();
-		ep_E = hypep.E(); em_E = em.E(); Jpsi_E = JPsi.E(); e_E = Electron.E();
-		p_eta = proton.Eta(); p_theta = proton.Theta(); p_phi = proton.Phi(); p_p = proton.Vect().Mag();
-		p_pT = proton.Perp(); p_E = proton.E(); 
 
 
 
@@ -500,7 +491,16 @@ void jpsi(
 			proton = rotlor*proton;
 		}
 
-
+		
+		Jpsi_M = JPsi.M();
+		ep_eta = hypep.Eta(); em_eta = em.Eta(); Jpsi_eta = JPsi.Eta(); e_eta = Electron.Eta();
+		ep_theta = hypep.Theta(); em_theta = em.Theta(); Jpsi_theta = JPsi.Theta(); e_theta = Electron.Theta();
+		ep_phi = hypep.Phi(); em_phi = em.Phi(); Jpsi_phi = JPsi.Phi(); e_phi = Electron.Phi();
+		ep_p = hypep.Vect().Mag(); em_p = em.Vect().Mag(); Jpsi_p = JPsi.Vect().Mag(); e_p = Electron.Vect().Mag();
+		ep_pT = hypep.Perp(); em_pT = em.Perp(); Jpsi_pT = JPsi.Perp(); e_pT = Electron.Perp();
+		ep_E = hypep.E(); em_E = em.E(); Jpsi_E = JPsi.E(); e_E = Electron.E();
+		p_eta = proton.Eta(); p_theta = proton.Theta(); p_phi = proton.Phi(); p_p = proton.Vect().Mag();
+		p_pT = proton.Perp(); p_E = proton.E(); 
 
 
 		//==== Kinematics from tracking ==========
